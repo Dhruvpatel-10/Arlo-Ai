@@ -1,5 +1,6 @@
 .env
 venv
 __pycache__
-main.py 
-.jpg
+test.py 
+screenshot.jpg
+webcam.jpg
