@@ -6,3 +6,5 @@ pillow==10.3.0
 pyAudio==0.2.14
 SpeechRecognition
 pyperclip==1.8.2
+pyaudio
+pygame

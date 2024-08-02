@@ -1,12 +1,11 @@
 import os
 from groq import Groq
-from tts import speak
+from asset.tts import speak
 from PIL import ImageGrab, Image
 import google.generativeai as genai
 from dotenv import load_dotenv
 import cv2
 import pyperclip as pc
-import pyaudio
 load_dotenv()
 
 groq_api = os.getenv("GROQ_API")
@@ -24,7 +23,6 @@ sys_msg = (
     'Use all of the context of this conversation so your response is relevant to the conversation. Make' 
     'your responses clear and concise, avoiding any verbosity.'
 )
-
 
 convo = [{"role": "system", "content": sys_msg}]
 
@@ -69,7 +67,6 @@ def groq_prompt(prompt, img_context):
 
     return response.content
    
-
 def function_call(prompt):
     sys_msg = (
         'You are an AI function calling model. You will determine whether extracting the users clipboard content, '
@@ -90,9 +87,8 @@ def function_call(prompt):
     response = chat_completion.choices[0].message
     return response.content
 
-
 def take_screenshot():
-    path = 'screenshot.jpg'
+    path = 'asset\screenshot.jpg'
     screenshot = ImageGrab.grab()
     rgb_screenshot = screenshot.convert('RGB')
     rgb_screenshot.save(path, quality = 15)
@@ -102,7 +98,7 @@ def web_cam_capture():
         print('Error: Camera did not open successfully')
         exit()
 
-    path = 'webcam.jpg'
+    path = 'asset\webcam.jpg'
     ret, frame =web_cam.read()
     cv2.imwrite(path, frame)
 
@@ -127,8 +123,6 @@ def vision_prompt(prompt, photo_path):
     response = model.generate_content([vision_prompt_text, img])
     return response.text
 
-
-
 while True:
     prompt = input('USER: ')
     call = function_call(prompt)
@@ -137,12 +131,12 @@ while True:
     if 'take screenshot' in call:
         print('Taking screenshot...')
         take_screenshot()
-        visual_context = vision_prompt(prompt=prompt, photo_path='screenshot.jpg')
+        visual_context = vision_prompt(prompt=prompt, photo_path='asset\screenshot.jpg')
     
     elif 'capture webcam' in call:
         print('Capturing webcam...')
         web_cam_capture()
-        visual_context = vision_prompt(prompt=prompt, photo_path='webcam.jpg')
+        visual_context = vision_prompt(prompt=prompt, photo_path='asset\webcam.jpg')
     elif 'extract clipborad' in call:
         print('Extracting clipboard text...')
         paste = get_clipborad_text()
@@ -151,3 +145,4 @@ while True:
 
     response = groq_prompt(prompt=prompt, img_context= visual_context)
     print(response)
+    speak(response)
