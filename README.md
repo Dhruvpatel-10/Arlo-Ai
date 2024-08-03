@@ -18,10 +18,11 @@ This is an AI Assistant project named Lexi that uses speech recognition and text
 pip install -r requirements.txt
 ```
 
-## Add api in .env folder         
+## Add api in .env folder 
+```
 GROQ_API=your_groq_api_key
 GEMINI_API=your_gemini_api_key
-
+```
 ## RUN 
 ```
 python main.py
