@@ -23,6 +23,6 @@ GROQ_API=your_groq_api_key
 GEMINI_API=your_gemini_api_key
 
 ## RUN 
+```
 python main.py
-
-
+```
