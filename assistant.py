@@ -9,10 +9,10 @@ import cv2
 import pyperclip as pc
 import time, threading
 
-# Load environment variables
+
 load_dotenv()
 
-# Initialize API clients
+
 groq_api = os.getenv("GROQ_API")
 genai_api = os.getenv("GEMINI_API")
 groq_client = Groq(api_key=groq_api)
@@ -20,7 +20,7 @@ genai.configure(api_key=genai_api)
 web_cam = cv2.VideoCapture(0)
 listener = SpeechToTextListener(language="en-US")
 
-# System message for AI model
+
 sys_msg = (
     'You are a multi-modal AI voice assistant. Your user may or may not have attached a photo for context '
     '(either a screenshot or a webcam capture). Any photo has already been processed into a highly detailed '
@@ -91,7 +91,7 @@ def web_cam_capture():
     global web_cam
     if not web_cam.isOpened():
         print('Error: Camera did not open successfully')
-        web_cam = cv2.VideoCapture(0)  # Reinitialize the webcam
+        web_cam = cv2.VideoCapture(0) 
         if not web_cam.isOpened():
             print('Error: Camera could not be reinitialized')
             return
@@ -130,10 +130,12 @@ def vision_prompt(prompt, photo_path):
 while True:
     threading.Thread(target=delayed_print, args=("Listening...", 3), daemon=True).start()
     user_prompt = listener.listen()
+    if user_prompt.lower() == "stop lexi":
+        break
     call = function_call(user_prompt)
     visual_context = None
 
-    # Handle different commands
+
     if 'take screenshot' in call:
         print('\n[INFO] Taking screenshot...')
         take_screenshot()
@@ -151,15 +153,12 @@ while True:
             user_prompt = f'{user_prompt}\n\nCLIPBOARD CONTENT: {clipboard_text}'
         visual_context = None
 
-    # Get the assistant's response
     response = groq_prompt(prompt=user_prompt, img_context=visual_context)
 
-    # Print the results with clear labels
     print("\n" + "="*50)
     print(f"USER: {user_prompt}")
     print("="*50)
     print(f"ASSISTANT: {response}")
     print("="*50)
 
-    # Speak the response
     speak(response)

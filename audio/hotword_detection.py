@@ -27,17 +27,10 @@ class HotwordDetector:
         self._stop_requested = False
 
     def stop(self) -> None:
-        """Stops the hotword detection process."""
         self._stop_requested = True
         if self.prints: print("Hotword detection has been stopped.")
 
     def listen_for_hotwords(self, stop_event: Optional[object] = None) -> bool:
-        """
-        Listens for hotwords and returns True if a hotword is detected, False otherwise.
-        If an activation or deactivation sound path is provided, the corresponding sound will be played.
-        :param stop_event: An optional threading.Event() to stop listening externally.
-        :return: True if a hotword is detected, False otherwise.
-        """
         try:
             if self.deactivation_sound_path:
                 self._play_sound(self.deactivation_sound_path)
@@ -57,13 +50,11 @@ class HotwordDetector:
             self._cleanup()
 
     def _play_sound(self, sound_path: Optional[str]) -> None:
-        """Plays a sound file if a path is provided."""
         if sound_path: playsound(sound_path)
         if self.prints: print(f"Playing sound: {sound_path}")
             
 
     def _cleanup(self) -> None:
-        """Releases resources."""
         if self.prints: print("Cleaning up resources...")
         if self.porcupine is not None:
             self.porcupine.delete()

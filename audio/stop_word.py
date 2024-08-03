@@ -16,7 +16,7 @@ def play_audio_Event(file_path: str, stop_event: threading.Event, prints: bool =
     if prints: print(f"Playing audio: {file_path}")
     
     while pygame.mixer.music.get_busy() and not stop_event.is_set():
-        time.sleep(0.1)  # Small sleep to prevent busy-waiting
+        time.sleep(0.1)  
     
     if stop_event.is_set():
         pygame.mixer.music.stop()
@@ -26,14 +26,7 @@ def play_audio_Event(file_path: str, stop_event: threading.Event, prints: bool =
     if prints: print("Pygame mixer quit.")
 
 def detect_hotword(detector: HotwordDetector, stop_event: threading.Event, prints: bool = False) -> None:
-    """
-    Detects hotwords using the HotwordDetector instance. Sets the stop_event if a hotword is detected.
     
-    Args:
-        detector (HotwordDetector): The hotword detector instance.
-        stop_event (threading.Event): Event to signal that a hotword has been detected.
-        prints (bool): If True, enables print statements. Defaults to False.
-    """
     hotword_detected = detector.listen_for_hotwords()
     if hotword_detected:
         stop_event.set()

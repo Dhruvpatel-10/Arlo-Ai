@@ -57,36 +57,29 @@ class SpeechToTextListener:
         try:
             self.driver.get(self.website_path)
             
-            # Wait for the language select element to be present
             self.wait.until(EC.presence_of_element_located((By.ID, "language_select")))
             
-            # Select the language
             self.select_language()
 
-            # Verify the language selection
             if not self.verify_language_selection():
                 print(f"Error: Failed to select the correct language. Selected: {self.verify_language_selection()}, Expected: {self.language}")
                 return None
 
-            # Start recording
             self.driver.find_element(By.ID, "click_to_record").click()
 
-            # Wait for the recording status element to be present
             is_recording = self.wait.until(EC.presence_of_element_located((By.ID, "is_recording")))
 
-            # Start the streaming thread
             stream_thread = threading.Thread(target=self.update_stream)
             stream_thread.start()
 
-            # Monitor the recording status
             while True:
                 is_recording_text = self.driver.find_element(By.ID, "is_recording").text
                 if not is_recording_text.startswith("Recording: True"):
-                    self.stop_event.set()  # Signal the stream thread to stop
+                    self.stop_event.set()  
                     break
-                time.sleep(2)  # Adjust polling interval as needed
+                time.sleep(2) 
 
-            stream_thread.join()  # Ensure the streaming thread has finished
+            stream_thread.join() 
             return self.get_text()
         except Exception as e:
             print(f"Error during main processing: {e}")
@@ -99,7 +92,7 @@ class SpeechToTextListener:
                 text = self.get_text()
                 if text:
                     self.stream(text)
-                time.sleep(1)  # Adjust update interval as needed
+                time.sleep(1)  
             except Exception as e:
                 print(f"Error during streaming update: {e}")
                 break

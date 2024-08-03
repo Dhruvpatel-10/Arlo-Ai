@@ -14,7 +14,7 @@ def speak(text: str, model: str = "aura-luna-en", filename: str = "asset\output_
 
     try:
         response = requests.post(url, json=payload)
-        response.raise_for_status()  # Ensure the request was successful
+        response.raise_for_status() 
 
         with open(filename, 'wb') as audio_file:
             audio_file.write(base64.b64decode(response.json()['data']))
@@ -22,9 +22,9 @@ def speak(text: str, model: str = "aura-luna-en", filename: str = "asset\output_
         play_audio(filename)
         os.remove(filename)
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")  # Handle specific HTTP errors
+        print(f"HTTP error occurred: {http_err}") 
     except Exception as err:
-        print(f"An error occurred: {err}")  # Handle other errors
+        print(f"An error occurred: {err}")  
 
 if __name__ == "__main__":
     speak("Thank you for watching! I hope you found this video informative and helpful. If you did, please give it a thumbs up and consider subscribing to my channel for more videos like this")
