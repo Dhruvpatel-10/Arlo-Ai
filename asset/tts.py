@@ -1,6 +1,6 @@
 import requests
 import base64
-# from audio.stop_word import play_audio
+from audio.stop_word import play_audio
 import os
 
 model_name = os.getenv('MODEL_NAME')
