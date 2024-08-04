@@ -1,9 +1,10 @@
 import requests
 import base64
-from audio.stop_word import play_audio
+# from audio.stop_word import play_audio
 import os
 
-def speak(text: str, model: str = "aura-luna-en", filename: str = "asset\output_audio.mp3"):
+model_name = os.getenv('MODEL_NAME')
+def speak(text: str, model: str = model_name, filename: str = "asset\output_audio.mp3"):
     try:
         os.remove(filename)
     except FileNotFoundError:

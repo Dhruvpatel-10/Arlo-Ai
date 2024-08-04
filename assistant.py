@@ -128,7 +128,9 @@ def vision_prompt(prompt, photo_path):
     return response.text
 
 while True:
-    threading.Thread(target=delayed_print, args=("Listening...", 3), daemon=True).start()
+
+    threading.Thread(target=delayed_print, args=("Listening...", 3.8), daemon=True).start()
+
     user_prompt = listener.listen()
     if user_prompt.lower() == "stop lexi":
         break

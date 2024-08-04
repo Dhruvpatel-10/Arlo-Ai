@@ -65,7 +65,7 @@ class HotwordDetector:
         if self.prints: print("Resources have been cleaned up.")
 
 if __name__ == "__main__":
-    detector = HotwordDetector(prints=False)
+    detector = HotwordDetector(prints=True)
     hotword_detected = detector.listen_for_hotwords()
 
     if hotword_detected:
