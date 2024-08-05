@@ -21,4 +21,4 @@ pip install -r requirements.txt
 ```
 python assistant.py
 ```
-##If not working Try to restart your IDE
+## If not working Try to restart your IDE
