@@ -1,8 +1,10 @@
 import requests
 import base64
 from audio.stop_word import play_audio
-import os
+import os 
+from virtual_aide.assistreq_pws import set_env_vars
 
+set_env_vars()
 model_name = os.getenv('MODEL_NAME')
 def speak(text: str, model: str = model_name, filename: str = "asset\output_audio.mp3"):
     try:
@@ -28,4 +30,5 @@ def speak(text: str, model: str = model_name, filename: str = "asset\output_audi
         print(f"An error occurred: {err}")  
 
 if __name__ == "__main__":
-    speak("Thank you for watching! I hope you found this video informative and helpful. If you did, please give it a thumbs up and consider subscribing to my channel for more videos like this")
+    # speak("Thank you for watching! I hope you found this video informative and helpful. If you did, please give it a thumbs up and consider subscribing to my channel for more videos like this")
+    print(model_name)

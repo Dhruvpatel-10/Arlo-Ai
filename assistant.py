@@ -3,16 +3,13 @@ from groq import Groq
 from asset.speech import SpeechToTextListener
 from asset.tts import speak
 from PIL import ImageGrab, Image
+from virtual_aide.assistreq_pws import set_env_vars
 import google.generativeai as genai
-from dotenv import load_dotenv
 import cv2
 import pyperclip as pc
 import time, threading
 
-
-load_dotenv()
-
-
+set_env_vars()
 groq_api = os.getenv("GROQ_API")
 genai_api = os.getenv("GEMINI_API")
 groq_client = Groq(api_key=groq_api)
