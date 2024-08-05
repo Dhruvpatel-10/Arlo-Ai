@@ -1,13 +1,13 @@
 import os
 from groq import Groq
-from asset.speech import SpeechToTextListener
-from asset.tts import speak
 from PIL import ImageGrab, Image
 from virtual_aide.assistreq_pws import set_env_vars
+from voice_a.voice_a import speak,SpeechToTextListener
 import google.generativeai as genai
 import cv2
 import pyperclip as pc
 import time, threading
+
 
 set_env_vars()
 groq_api = os.getenv("GROQ_API")
