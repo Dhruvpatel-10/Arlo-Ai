@@ -1,22 +1,22 @@
 import os
 from groq import Groq
 from PIL import ImageGrab, Image
-from virtual_aide.assistreq_pws import set_env_vars
-from voice_a.voice_a import speak,SpeechToTextListener
+from asset.speech import SpeechToTextListener
+from asset.tts import speak
 import google.generativeai as genai
 import cv2
 import pyperclip as pc
-import time, threading
+import time
+from dotenv import load_dotenv
 
+load_dotenv()
 
-set_env_vars()
 groq_api = os.getenv("GROQ_API")
 genai_api = os.getenv("GEMINI_API")
 groq_client = Groq(api_key=groq_api)
 genai.configure(api_key=genai_api)
 web_cam = cv2.VideoCapture(0)
 listener = SpeechToTextListener(language="en-US")
-
 
 sys_msg = (
     'You are a multi-modal AI voice assistant. Your user may or may not have attached a photo for context '
@@ -27,6 +27,7 @@ sys_msg = (
     'Use all of the context of this conversation so your response is relevant to the conversation. Make '
     'your responses clear and concise, avoiding any verbosity.'
 )
+
 
 convo = [{"role": "system", "content": sys_msg}]
 
@@ -47,10 +48,6 @@ safety_settings = [
 model = genai.GenerativeModel('gemini-1.5-flash-latest',
                               generation_config=generation_config,
                               safety_settings=safety_settings)
-
-def delayed_print(message: str, delay: float):
-    time.sleep(delay)
-    print(message)
 
 def groq_prompt(prompt, img_context):
     if img_context:
@@ -79,7 +76,7 @@ def function_call(prompt):
     return response.content
 
 def take_screenshot():
-    path = 'asset/screenshot.jpg'
+    path = 'asset/g/screenshot.jpg'
     screenshot = ImageGrab.grab()
     rgb_screenshot = screenshot.convert('RGB')
     rgb_screenshot.save(path, quality=15)
@@ -92,7 +89,7 @@ def web_cam_capture():
         if not web_cam.isOpened():
             print('Error: Camera could not be reinitialized')
             return
-    path = 'asset/webcam.jpg'
+    path = 'asset/g/webcam.jpg'
     ret, frame = web_cam.read()
     if ret:
         cv2.imwrite(path, frame)
@@ -124,13 +121,11 @@ def vision_prompt(prompt, photo_path):
     response = model.generate_content([vision_prompt_text, img])
     return response.text
 
+
 while True:
-
-    threading.Thread(target=delayed_print, args=("Listening...", 3.8), daemon=True).start()
-
-    user_prompt = listener.listen()
-    if user_prompt.lower() == "stop lexi":
-        break
+    print("Listening...")
+    time.sleep(1)
+    user_prompt = listener.listen() 
     call = function_call(user_prompt)
     visual_context = None
 
@@ -138,19 +133,19 @@ while True:
     if 'take screenshot' in call:
         print('\n[INFO] Taking screenshot...')
         take_screenshot()
-        visual_context = vision_prompt(prompt=user_prompt, photo_path='asset/screenshot.jpg')
-    
+        visual_context = vision_prompt(prompt=user_prompt, photo_path='asset/g/screenshot.jpg')
+            
     elif 'capture webcam' in call:
         print('\n[INFO] Capturing webcam...')
         web_cam_capture()
-        visual_context = vision_prompt(prompt=user_prompt, photo_path='asset/webcam.jpg')
-    
+        visual_context = vision_prompt(prompt=user_prompt, photo_path='asset/g/webcam.jpg')
+            
     elif 'extract clipboard' in call:
         print('\n[INFO] Extracting clipboard text...')
         clipboard_text = get_clipboard_text()
         if clipboard_text:
             user_prompt = f'{user_prompt}\n\nCLIPBOARD CONTENT: {clipboard_text}'
-        visual_context = None
+            visual_context = None
 
     response = groq_prompt(prompt=user_prompt, img_context=visual_context)
 

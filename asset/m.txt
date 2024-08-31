@@ -1,2 +1,2 @@
 Here, the audio and images will be stored. 
-Please do not delete this folder.
+Do not delete this folder.
