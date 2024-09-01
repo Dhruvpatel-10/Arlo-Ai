@@ -1,17 +1,15 @@
 import os
 from audio.stop_word import play_audio
 
-def speak(text: str, voice: str = 'en-US-AvaNeural') -> None:
-    
-    input_file = "asset/g/output_audio.mp3"
-    subtitle_file = 'asset/g/Subtitles_File.srt' 
-    command = f"edge-tts --voice \"{voice}\" --text \"{text}\" --write-media \"{input_file}\" --write-subtitles {subtitle_file}"
-    
+def speak(text: str, voice: str = 'en-IE-EmilyNeural', subtitle_file: str = 'Subtitles_File.srt') -> None:
+    text = os.linesep.join([s.strip() for s in text.splitlines() if s.strip()])
+
+    command = f"edge-tts --voice \"{voice}\" --text \"{text}\" --write-media \"{voice}.mp3\" --write-subtitles {subtitle_file}"
+
     os.system(command)
-    play_audio(input_file)
+    play_audio(f"{voice}.mp3")
     os.remove(subtitle_file)
-    os.remove(input_file)
+    os.remove(f"{voice}.mp3")
 
 if __name__ == "__main__": 
-    speak("Despite the serendipitous encounter, the indomitable scientist remained staunchly resolute in her preliminary hypothesis.")
-
+    speak("The sun sets slowly over the ocean, painting the sky with hues of orange and pink, as the sound of waves crashing against the shore fills the air.")

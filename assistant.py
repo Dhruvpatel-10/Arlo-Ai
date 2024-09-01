@@ -1,12 +1,10 @@
 import os
 from groq import Groq
 from PIL import ImageGrab, Image
-from asset.speech import SpeechToTextListener
 from asset.tts import speak
 import google.generativeai as genai
 import cv2
 import pyperclip as pc
-import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,7 +14,6 @@ genai_api = os.getenv("GEMINI_API")
 groq_client = Groq(api_key=groq_api)
 genai.configure(api_key=genai_api)
 web_cam = cv2.VideoCapture(0)
-listener = SpeechToTextListener(language="en-US")
 
 sys_msg = (
     'You are a multi-modal AI voice assistant. Your user may or may not have attached a photo for context '
@@ -76,7 +73,7 @@ def function_call(prompt):
     return response.content
 
 def take_screenshot():
-    path = 'asset/g/screenshot.jpg'
+    path = 'asset/screenshot.jpg'
     screenshot = ImageGrab.grab()
     rgb_screenshot = screenshot.convert('RGB')
     rgb_screenshot.save(path, quality=15)
@@ -89,7 +86,7 @@ def web_cam_capture():
         if not web_cam.isOpened():
             print('Error: Camera could not be reinitialized')
             return
-    path = 'asset/g/webcam.jpg'
+    path = 'asset/webcam.jpg'
     ret, frame = web_cam.read()
     if ret:
         cv2.imwrite(path, frame)
@@ -123,9 +120,7 @@ def vision_prompt(prompt, photo_path):
 
 
 while True:
-    print("Listening...")
-    time.sleep(1)
-    user_prompt = listener.listen() 
+    user_prompt = input("\nUSER: ")
     call = function_call(user_prompt)
     visual_context = None
 
@@ -133,12 +128,12 @@ while True:
     if 'take screenshot' in call:
         print('\n[INFO] Taking screenshot...')
         take_screenshot()
-        visual_context = vision_prompt(prompt=user_prompt, photo_path='asset/g/screenshot.jpg')
+        visual_context = vision_prompt(prompt=user_prompt, photo_path='asset/screenshot.jpg')
             
     elif 'capture webcam' in call:
         print('\n[INFO] Capturing webcam...')
         web_cam_capture()
-        visual_context = vision_prompt(prompt=user_prompt, photo_path='asset/g/webcam.jpg')
+        visual_context = vision_prompt(prompt=user_prompt, photo_path='asset/webcam.jpg')
             
     elif 'extract clipboard' in call:
         print('\n[INFO] Extracting clipboard text...')
@@ -154,5 +149,5 @@ while True:
     print("="*50)
     print(f"ASSISTANT: {response}")
     print("="*50)
-
+    if os.path.exists("temp_file.txt"): os.remove("temp_file.txt")
     speak(response)
