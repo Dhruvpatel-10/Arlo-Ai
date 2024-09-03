@@ -15,7 +15,7 @@ This is an AI Assistant project named Lexi that uses speech recognition and text
 - Python 3.8+
 - [Google Chrome](https://www.google.com/chrome/)
 
-### Set Up a Virtual Environment
+## Set Up a Virtual Environment
 **Create the Virtual Environment**
 ```
 python -m venv venv
@@ -35,6 +35,26 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+## Environment Variables
+
+This project uses a `.env` file to manage environment-specific settings like API keys, secret tokens, etc. An example file `.env.example` is provided in the source code.
+
+### Setting Up the `.env` File
+
+1. **Copy the `.env.example` file to a new file named `.env`**:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+2. **Open the `.env` file and update the environment variables as needed**:
+
+    - Replace placeholders with your actual values (e.g., API keys, paths).
+
+3. **Save the `.env` file**.
+
+After setting up the `.env` file, the project will automatically load these variables when you run the application.
+
 ## Run
 ```
 python assistant.py
