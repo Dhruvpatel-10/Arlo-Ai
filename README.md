@@ -15,7 +15,6 @@ This is an AI Assistant project named Lexi that uses speech recognition and text
 - Python 3.8+
 - [Google Chrome](https://www.google.com/chrome/)
 
-## Setup
 ### Set Up a Virtual Environment
 **Create the Virtual Environment**
 ```
