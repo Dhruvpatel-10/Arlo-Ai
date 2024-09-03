@@ -5,7 +5,10 @@ This is an AI Assistant project named Lexi that uses speech recognition and text
 ## Features
 - Speech recognition using a web-based real-time speech-to-text service
 - Hotword detection
-- ```'picovoice', 'terminator', 'americano', 'hey siri', 'bumblebee', 'ok google', 'blueberry', 'jarvis', 'pico clock', 'porcupine', 'grapefruit', 'hey google', 'alexa'``` ***This are some supported hotwords***
+> [!NOTE]
+> ### This are some supported hotwords
+> 
+> **'picovoice', 'terminator', 'americano', 'hey siri', 'bumblebee', 'ok google', 'blueberry', 'jarvis', 'pico clock', 'porcupine', 'grapefruit', 'hey google', 'alexa'**
 - Text-to-speech synthesis
 
 ## Requirements
@@ -13,13 +16,28 @@ This is an AI Assistant project named Lexi that uses speech recognition and text
 - [Google Chrome](https://www.google.com/chrome/)
 
 ## Setup
+### Set Up a Virtual Environment
+**Create the Virtual Environment**
+```
+python -m venv venv
+```
+**Activate the Virtual Environment**
 
+- On Windows:
+ ```
+ venv\Scripts\activate.ps1
+ ```
+
+- On macOS/Linux:
+```
+source venv/bin/activate
+ ```
 ## Install Requirements.txt
 ```bash
 pip install -r requirements.txt
 ```
-## RUN 
+## Run
 ```
 python assistant.py
 ```
-## If not working try to restart your IDE
+***If not working try to restart your IDE***
