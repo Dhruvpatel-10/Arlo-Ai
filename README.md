@@ -4,7 +4,8 @@ This is an AI Assistant project named Lexi that uses speech recognition and text
 
 ## Features
 - Speech recognition using a web-based real-time speech-to-text service
-- Hotword detection 'picovoice', 'terminator', 'americano', 'hey siri', 'bumblebee', 'ok google', 'blueberry', 'jarvis', 'pico clock', 'porcupine', 'grapefruit', 'hey google', 'alexa' This are some supported hotwords
+- Hotword detection
+- ```'picovoice', 'terminator', 'americano', 'hey siri', 'bumblebee', 'ok google', 'blueberry', 'jarvis', 'pico clock', 'porcupine', 'grapefruit', 'hey google', 'alexa'``` ***This are some supported hotwords***
 - Text-to-speech synthesis
 
 ## Requirements
