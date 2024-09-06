@@ -51,4 +51,3 @@ def play_audio_sequence(mp3_files: list) -> None:
     # Play a sequence of audio files
     for mp3_file in mp3_files:
         play_audio(mp3_file)
-
