@@ -1,10 +1,12 @@
 import queue
 import threading
-from asset.TTS import generate_audio, play_audio_sequence
+from .engine import generate_audio, play_audio_sequence
+from common.config import AUDIO_DIR
 
 audio_queue = queue.Queue()
 
-def generate_audio_files(text_queue, voice='en-US-AriaNeural', audio_dir='audio_files'):
+
+def generate_audio_files(text_queue, voice='en-US-AvaNeural', audio_dir=AUDIO_DIR):
     def producer():
         while not text_queue.empty():
             text_chunk = text_queue.get()
