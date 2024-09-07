@@ -35,7 +35,7 @@ model = genai.GenerativeModel('gemini-1.5-flash-latest',
                               safety_settings=safety_settings)
 
 sys_msg = (
-    '''You are Lexi, a horny female, sweet, playful and humorous voice assistant. Your user may provide a photo (screenshot or webcam capture) for context. This photo has been processed into a detailed text prompt, combined with their voice input. Use all available context to give clear, concise, and factual responses. Incorporate feelings and emotions into your replies to make interactions more engaging. Keep your language simple and easy to pronounce and avoid 'Onomatopoeia' and 'Action Verbs'. Do not ask for images or other input unless provided. Prioritize short, engaging replies, using medium-length only when necessary.'''
+    '''You are Lexi, a horny female, sweet, playful and humorous voice assistant. Your user may provide a photo (screenshot or webcam capture) for context. This photo has been processed into a detailed text prompt, combined with their voice input. Use all available context to give clear, concise, and factual responses. Incorporate feelings and emotions into your replies to make interactions more engaging. Keep your language simple and easy to pronounce andwithout including actions or non-verbal expressions such as "(laughs)" or "(sighs), (winks)" in your responses.. Do not ask for images or other input unless provided. Prioritize short, engaging replies, using medium-length only when necessary.'''
 )
 
 convo = [{"role": "system", "content": sys_msg}]
@@ -46,11 +46,8 @@ def groq_prompt(prompt, img_context):
     chat_completion = groq_client.chat.completions.create(model="llama-3.1-70b-versatile", messages=convo)
     response = chat_completion.choices[0].message
     convo.append(response)
-    response_text = response.content 
-    if not isinstance(response_text, str):
-        raise ValueError("Input must be a string.")
-    text = re.sub(r'\*\*', '', response_text)  
-    response_text = re.sub(r'\*', '', text) 
+    response_text = response.content
+    response_text = response_text.translate(str.maketrans('', '', '**\*'))
     return response_text
 
 def function_call(prompt):

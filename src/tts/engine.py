@@ -5,7 +5,7 @@ from playsound import playsound
 
 def generate_audio(text: str, voice: str, audio_dir: str) -> str:
     # Clean and format text
-    limited_hash = randint(0, 10001)
+    limited_hash = randint(0, 1452)
     text = os.linesep.join([s.strip().replace("*", "") for s in text.splitlines() if s.strip()])
 
     # Create directory for audio files
@@ -43,3 +43,4 @@ def play_audio_sequence(mp3_files: list) -> None:
     # Play a sequence of audio files
     for mp3_file in mp3_files:
         play_audio(mp3_file)
+

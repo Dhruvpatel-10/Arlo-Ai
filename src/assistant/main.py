@@ -2,7 +2,7 @@ from src.llm.model import *
 from src.llm.utils import *
 from tts.audio import generate_audio_files
 from common.config import IMAGES_DIR
-import queue
+from collections import deque
 
 def main():
     print("\n[INFO] Initializing Assistant...")
@@ -11,6 +11,7 @@ def main():
         call = function_call(user_prompt)
         visual_context = None
         imgpath = IMAGES_DIR
+        
         if 'take screenshot' in call:
             print('\n[INFO] Taking screenshot...')
             take_screenshot()
@@ -32,9 +33,9 @@ def main():
         print("\n" + "="*50)
         print(f"ASSISTANT: {response}")
         print("="*50)
-        text_queue = queue.Queue()
+
+        text_queue = deque()
         paragraphs = split_and_combine_text(response)
         for para in paragraphs:
-            text_queue.put(para)    
-        generate_audio_files(text_queue)
-    
+            text_queue.append(para) 
+        generate_audio_files(text_queue) 
