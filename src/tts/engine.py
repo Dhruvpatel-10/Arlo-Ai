@@ -1,9 +1,7 @@
 import os
+from random import randint
 import subprocess
-from random import randint 
-import sounddevice as sd
-import soundfile as sf
-
+from playsound import playsound
 
 def generate_audio(text: str, voice: str, audio_dir: str) -> str:
     # Clean and format text
@@ -28,19 +26,13 @@ def generate_audio(text: str, voice: str, audio_dir: str) -> str:
 
     # Clean up temporary text file
     if os.path.exists(temp_f): os.remove(temp_f)
+
     return mp3_file
 
 def play_audio(mp3_file: str) -> None:
     if os.path.exists(mp3_file):
         try:
-            # Read audio data from the file
-            data, samplerate = sf.read(mp3_file)
-            
-            # Play the audio file using sounddevice
-            sd.play(data, samplerate)
-            sd.wait()  # Wait until the file is finished playing
-            
-            # Optionally remove the audio file after playing
+            playsound(mp3_file)
             os.remove(mp3_file)
         except Exception as e:
             print(f"Failed to play the audio: {e}")

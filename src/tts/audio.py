@@ -5,7 +5,6 @@ from common.config import AUDIO_DIR
 
 audio_queue = queue.Queue()
 
-
 def generate_audio_files(text_queue, voice='en-US-AvaNeural', audio_dir=AUDIO_DIR):
     def producer():
         while not text_queue.empty():
@@ -29,3 +28,4 @@ def generate_audio_files(text_queue, voice='en-US-AvaNeural', audio_dir=AUDIO_DI
 
     producer_thread.join()
     consumer_thread.join()
+  
