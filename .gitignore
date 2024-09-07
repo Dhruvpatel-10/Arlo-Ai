@@ -1,8 +1,8 @@
 venv
 .env
 __pycache__
-test.py 
-z_anyfile.py
+test.py
 screenshot.jpg
 webcam.jpg
 import_test.py
+data/audio/*.mp3
