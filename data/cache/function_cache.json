@@ -1,0 +1,62 @@
+{
+    "functions": [
+        {
+            "name": "extract_clipboard",
+            "description": "Extract text from clipboard",
+            "pattern": "\\b(clipboard|copied|paste)\\b"
+        },
+        {
+            "name": "take_screenshot",
+            "description": "Capture screen content",
+            "pattern": "\\b(screen|screenshot|capture)\\b"
+        },
+        {
+            "name": "capture_webcam",
+            "description": "Capture image from webcam",
+            "pattern": "\\b(camera|webcam|visual input)\\b"
+        },
+        {
+            "name": "open_word",
+            "description": "Open Microsoft Word",
+            "pattern": "\\b(open|start)\\s+(word|microsoft word)\\b"
+        },
+        {
+            "name": "open_excel",
+            "description": "Open Microsoft Excel",
+            "pattern": "\\b(open|start)\\s+(excel|microsoft excel)\\b"
+        },
+        {
+            "name": "open_powerpoint",
+            "description": "Open Microsoft PowerPoint",
+            "pattern": "\\b(open|start)\\s+(powerpoint|microsoft powerpoint)\\b"
+        },
+        {
+            "name": "open_browser",
+            "description": "Open a web browser",
+            "pattern": "\\b(open|start)\\s+(browser|google)\\b"
+        },
+        {
+            "name": "open_youtube",
+            "description": "Open YouTube",
+            "pattern": "\\b(open|start)\\s+(youtube)\\b"
+        }
+    ],
+    "cache": {
+        "hey how you doing": [
+            "None",
+            0.9
+        ],
+        "hey how are you": [
+            "None",
+            0.9
+        ],
+        "hey what's up": [
+            "None",
+            0.9
+        ],
+        "no tell me history of India": [
+            "None",
+            0.9
+        ]
+    }
+}

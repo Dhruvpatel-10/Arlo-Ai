@@ -1,41 +1,43 @@
-from src.llm.model import *
-from src.llm.utils import *
+import os
+# from func.vision_func import take_screenshot, web_cam_capture, get_clipboard_text, vision_prompt
+from src.llm.model import groq_prompt
+from src.llm.utils import split_and_combine_text
 from tts.audio import generate_audio_files
 from common.config import IMAGES_DIR
 from collections import deque
+from func.commands import process_command
+from func.function_registry import FunctionRegistry, HybridFunctionCaller
+from dotenv import load_dotenv
+from groq import Groq
+load_dotenv()
+
+groq_api = os.getenv("GROQ_API_FUNC")
+
+groq_client = Groq(api_key=groq_api)
+registry = FunctionRegistry()
+function_caller = HybridFunctionCaller(registry)
 
 def main():
     print("\n[INFO] Initializing Assistant...")
+    
     while True:
         user_prompt = input("\nUSER: ")
-        call = function_call(user_prompt)
+        # Call the hybrid function to determine the action
+        action = function_caller.call(user_prompt)
+        action = str(action).lower()
         visual_context = None
-        imgpath = IMAGES_DIR
-        
-        if 'take screenshot' in call:
-            print('\n[INFO] Taking screenshot...')
-            take_screenshot()
-            visual_context = vision_prompt(prompt=user_prompt, photo_path=os.path.join(imgpath, 'screenshot.jpg'))
-                
-        elif 'capture webcam' in call:
-            print('\n[INFO] Capturing webcam...')
-            web_cam_capture()
-            visual_context = vision_prompt(prompt=user_prompt, photo_path=os.path.join(imgpath, 'webcam.jpg'))
-                
-        elif 'extract clipboard' in call:
-            print('\n[INFO] Extracting clipboard text...')
-            clipboard_text = get_clipboard_text()
-            if clipboard_text:
-                user_prompt = f'{user_prompt}\n\nCLIPBOARD CONTENT: {clipboard_text}'
-                visual_context = None
-
+        if action != "none":
+            process_command(user_prompt)
+        # Call the LLM with the user prompt and any visual context
         response = groq_prompt(prompt=user_prompt, img_context=visual_context)
+        
         print("\n" + "="*50)
         print(f"ASSISTANT: {response}")
         print("="*50)
 
+        # Generate audio response from the text response
         text_queue = deque()
         paragraphs = split_and_combine_text(response)
         for para in paragraphs:
             text_queue.append(para) 
-        generate_audio_files(text_queue) 
+        generate_audio_files(text_queue)
