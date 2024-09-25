@@ -18,27 +18,27 @@
         {
             "name": "open_word",
             "description": "Open Microsoft Word",
-            "pattern": "\\b(open|start)\\s+(word|microsoft word)\\b"
+            "pattern": "\\b(open|start)\\b.*\\b(word)\\b"
         },
         {
             "name": "open_excel",
             "description": "Open Microsoft Excel",
-            "pattern": "\\b(open|start)\\s+(excel|microsoft excel)\\b"
+            "pattern": "\\b(open|start)\\b.*\\b(excel)\\b"
         },
         {
             "name": "open_powerpoint",
             "description": "Open Microsoft PowerPoint",
-            "pattern": "\\b(open|start)\\s+(powerpoint|microsoft powerpoint)\\b"
+            "pattern": "\\b(open|start)\\b.*\\b(powerpoint|power point)\\b"
         },
         {
             "name": "open_browser",
-            "description": "Open a web browser",
-            "pattern": "\\b(open|start)\\s+(browser|google)\\b"
+            "description": "Open the default browser",
+            "pattern": "\\b(open|start)\\b.*\\b(browser|google|website)\\b"
         },
         {
             "name": "open_youtube",
-            "description": "Open YouTube",
-            "pattern": "\\b(open|start)\\s+(youtube)\\b"
+            "description": "Open YouTube and optionally search for a query",
+            "pattern": "\\b(open|start)\\b.*\\b(youtube)\\b|\\b(search youtube for)\\b"
         }
     ],
     "cache": {
@@ -57,6 +57,19 @@
         "no tell me history of India": [
             "None",
             0.9
-        ]
+        ],
+        "hey": [
+            "'None'",
+            0.9
+        ],
+        "what's behind me": [
+            "'capture_webcam'",
+            0.9
+        ],
+        "Who was Maharana Pratap": "None",
+        "Who was Shivji Maharaja": "None",
+        "History of Russia": "None",
+        "I want to search on youtube about superman": "open_youtube",
+        "what's apple is": "None"
     }
 }

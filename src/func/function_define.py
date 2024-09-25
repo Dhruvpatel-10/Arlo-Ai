@@ -1,17 +1,23 @@
 import os
-from common.config import IMAGES_DIR
 import cv2
 import pyperclip as pc
 from PIL import ImageGrab, Image
 import google.generativeai as genai
 from dotenv import load_dotenv
+import subprocess
+import webbrowser
+from common.config import IMAGES_DIR
 
+# Load environment variables
 load_dotenv()
 genai_api = os.getenv("GEMINI_API")
 genai.configure(api_key=genai_api)
+
+# Initialize webcam
 web_cam = cv2.VideoCapture(0)
 dir_path = IMAGES_DIR
 
+# Generation configuration for AI
 generation_config = {
     'temperature': 0.7,
     'top_p': 1,
@@ -19,6 +25,7 @@ generation_config = {
     'max_output_tokens': 2048
 }
 
+# Safety settings for AI model
 safety_settings = [
     {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
     {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -26,16 +33,20 @@ safety_settings = [
     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
+# Initialize the AI model
 model = genai.GenerativeModel('gemini-1.5-flash-latest',
                               generation_config=generation_config,
                               safety_settings=safety_settings)
 
+# Function to take a screenshot
 def take_screenshot():
     path = os.path.join(dir_path, 'screenshot.jpg')
     screenshot = ImageGrab.grab()
     rgb_screenshot = screenshot.convert('RGB')
     rgb_screenshot.save(path, quality=15)
+    return path
 
+# Function to capture image from webcam
 def web_cam_capture():
     global web_cam
     if not web_cam.isOpened():
@@ -55,7 +66,9 @@ def web_cam_capture():
     web_cam.release()
     cv2.destroyAllWindows()
     web_cam = cv2.VideoCapture(0)
+    return path
 
+# Function to get text from clipboard
 def get_clipboard_text():
     clipboard_content = pc.paste()
     if isinstance(clipboard_content, str):
@@ -63,7 +76,8 @@ def get_clipboard_text():
     else:
         print('No clipboard text to copy')
         return None
-    
+
+# Function to generate a vision prompt
 def vision_prompt(prompt, photo_path) -> str:
     img = Image.open(photo_path)
     vision_prompt_text = (
@@ -76,3 +90,47 @@ def vision_prompt(prompt, photo_path) -> str:
     response = model.generate_content([vision_prompt_text, img])
     os.remove(photo_path)
     return response.text
+
+def open_word():
+    try:
+        # Using subprocess to open Microsoft Word
+        subprocess.Popen(['start', 'winword'], shell=True)
+        return "Microsoft Word opened successfully."
+    except FileNotFoundError:
+        return "Microsoft Word executable not found. Please check if Word is installed."
+    except Exception as e:
+        return f"Error opening Microsoft Word: {str(e)}"
+
+def open_excel():
+    try:
+        subprocess.Popen(['start', 'excel'], shell=True)
+        return "Microsoft Excel opened successfully."
+    except FileNotFoundError:
+        return "Microsoft Excel executable not found. Please check if Excel is installed."
+    except Exception as e:
+        return f"Error opening Microsoft Excel: {str(e)}"
+
+def open_powerpoint():
+    try:
+        subprocess.Popen(['start', 'powerpnt'], shell=True)
+        return "Microsoft PowerPoint opened successfully."
+    except FileNotFoundError:
+        return "Microsoft PowerPoint executable not found. Please check if PowerPoint is installed."
+    except Exception as e:
+        return f"Error opening Microsoft PowerPoint: {str(e)}"
+
+
+def open_browser(url='https://www.google.com'):
+    try:
+        webbrowser.open(url)
+        return f"Opened {url} in the default browser."
+    except Exception as e:
+        return f"Error opening the browser: {str(e)}"
+
+def open_youtube(search_query=None):
+    base_url = "https://www.youtube.com"
+    if search_query:
+        search_url = f"{base_url}/results?search_query={search_query.replace(' ', '+')}"
+    else:
+        search_url = base_url
+    return open_browser(search_url)

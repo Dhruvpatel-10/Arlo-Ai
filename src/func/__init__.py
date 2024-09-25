@@ -1,3 +1,3 @@
-from func.function_registry import FunctionRegistry, HybridFunctionCaller
-from func.vision_func import *
-from func.commands import *
+from .function_registry import FunctionRegistry, HybridFunctionCaller
+from .function_define import *
+from .commands import *

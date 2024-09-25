@@ -1,14 +1,14 @@
-import nltk
-from collections import deque
-
 try:
+    import nltk
     nltk.data.find('tokenizers/punkt')
-except LookupError:
+except ModuleNotFoundError: 
+    print("[INFO] Downloading punkt tokenizer...")
     nltk.download('punkt')
+from collections import deque
     
 def split_and_combine_text(text, max_length=300, min_length=150):
-    sentences = nltk.sent_tokenize(text)
     
+    sentences = nltk.sent_tokenize(text)
     paragraphs = deque()
     current_paragraph = deque()
 

@@ -19,18 +19,17 @@ function_caller = HybridFunctionCaller(registry)
 
 def main():
     print("\n[INFO] Initializing Assistant...")
-    
     while True:
         user_prompt = input("\nUSER: ")
         # Call the hybrid function to determine the action
         action = function_caller.call(user_prompt)
-        action = str(action).lower()
+        action = str(action)
+        f_exe = None
         visual_context = None
-        if action != "none":
-            process_command(user_prompt)
-        # Call the LLM with the user prompt and any visual context
-        response = groq_prompt(prompt=user_prompt, img_context=visual_context)
-        
+        if action != "None":
+            f_exe, visual_context = process_command(action)
+        response = groq_prompt(prompt=user_prompt, img_context=visual_context, function_execution=f_exe)
+
         print("\n" + "="*50)
         print(f"ASSISTANT: {response}")
         print("="*50)
