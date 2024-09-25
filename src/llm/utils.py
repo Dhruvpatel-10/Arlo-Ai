@@ -7,10 +7,6 @@ except LookupError:
     nltk.download('punkt')
     
 def split_and_combine_text(text, max_length=300, min_length=150):
-    """
-    Splits the text into paragraphs based on length and combines the last two
-    paragraphs if their combined length meets the minimum length requirement.
-    """
     sentences = nltk.sent_tokenize(text)
     
     paragraphs = deque()
