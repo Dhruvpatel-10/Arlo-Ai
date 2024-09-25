@@ -5,7 +5,7 @@ from playsound import playsound
 
 def generate_audio(text: str, voice: str, audio_dir: str) -> str:
     # Clean and format text
-    limited_hash = randint(0, 1452)
+    limited_hash = randint(0, 14526)
     text = os.linesep.join([s.strip().replace("*", "") for s in text.splitlines() if s.strip()])
 
     # Create directory for audio files
