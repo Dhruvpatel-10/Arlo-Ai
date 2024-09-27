@@ -1,9 +1,4 @@
-try:
-    import nltk
-    nltk.data.find('tokenizers/punkt')
-except ModuleNotFoundError: 
-    print("[INFO] Downloading punkt tokenizer...")
-    nltk.download('punkt')
+import nltk
 from collections import deque
     
 def split_and_combine_text(text, max_length=300, min_length=150):
