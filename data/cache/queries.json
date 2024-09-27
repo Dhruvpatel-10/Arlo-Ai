@@ -1,0 +1,93 @@
+[
+    {
+        "prompt": "Open YouTube",
+        "action": {
+            "platform": "youtube",
+            "query": null
+        }
+    },
+    {
+        "prompt": "Go to Google",
+        "action": {
+            "platform": "google",
+            "query": null
+        }
+    },
+    {
+        "prompt": "Search for cats on YouTube",
+        "action": {
+            "platform": "youtube",
+            "query": "cats"
+        }
+    },
+    {
+        "prompt": "Look up recipe for chocolate cake on Google",
+        "action": {
+            "platform": "google",
+            "query": "recipe for chocolate cake"
+        }
+    },
+    {
+        "prompt": "Show me videos about ancient Egypt on YouTube",
+        "action": {
+            "platform": "youtube",
+            "query": "ancient Egypt"
+        }
+    },
+    {
+        "prompt": "Find information about the solar system using Google",
+        "action": {
+            "platform": "google",
+            "query": "the solar system"
+        }
+    },
+    {
+        "prompt": "On YouTube, search for new music releases",
+        "action": {
+            "platform": "youtube",
+            "query": "new music releases"
+        }
+    },
+    {
+        "prompt": "Using Google, find the best restaurants nearby",
+        "action": {
+            "platform": "google",
+            "query": "the best restaurants nearby"
+        }
+    },
+    {
+        "prompt": "Play YouTube videos related to machine learning tutorials for beginners",
+        "action": {
+            "platform": "youtube",
+            "query": "machine learning tutorials for beginners"
+        }
+    },
+    {
+        "prompt": "Search Google for the impact of artificial intelligence on job markets in the next decade",
+        "action": {
+            "platform": "google",
+            "query": "the impact of artificial intelligence on job markets in the next decade"
+        }
+    },
+    {
+        "prompt": "Search for dance moves on google",
+        "action": {
+            "platform": "google",
+            "query": "dance moves"
+        }
+    },
+    {
+        "prompt": "Play some music on Spotify",
+        "action": {
+            "platform": "spotify",
+            "query": "some music"
+        }
+    },
+    {
+        "prompt": "What's apple search on youtube",
+        "action": {
+            "platform": "youtube",
+            "query": "what's apple search"
+        }
+    }
+]
