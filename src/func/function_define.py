@@ -5,8 +5,8 @@ from PIL import ImageGrab, Image
 import google.generativeai as genai
 from dotenv import load_dotenv
 import subprocess
-import webbrowser
 from common.config import IMAGES_DIR
+
 
 # Load environment variables
 load_dotenv()
@@ -120,17 +120,5 @@ def open_powerpoint():
         return f"Error opening Microsoft PowerPoint: {str(e)}"
 
 
-def open_browser(url='https://www.google.com'):
-    try:
-        webbrowser.open(url)
-        return f"Opened {url} in the default browser."
-    except Exception as e:
-        return f"Error opening the browser: {str(e)}"
 
-def open_youtube(search_query=None):
-    base_url = "https://www.youtube.com"
-    if search_query:
-        search_url = f"{base_url}/results?search_query={search_query.replace(' ', '+')}"
-    else:
-        search_url = base_url
-    return open_browser(search_url)
+

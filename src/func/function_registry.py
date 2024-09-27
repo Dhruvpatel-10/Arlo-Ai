@@ -64,7 +64,7 @@ class HybridFunctionCaller:
     def __init__(self, registry: FunctionRegistry):
         self.registry = registry
 
-    def rule_based_call(self, prompt: str) -> Tuple[str, float]:
+    def rule_based_call(self, prompt: str) -> str:
         for name, pattern in self.registry.patterns.items():
             if pattern.search(prompt):
                 return name # High confidence for exact matches
@@ -75,18 +75,17 @@ class HybridFunctionCaller:
 
         return "None"
 
-    def llm_based_call(self, prompt: str) -> Tuple[str, float]:
+    def llm_based_call(self, prompt: str) -> str:
         # Check cache first
         if prompt in self.registry.cache:
             return self.registry.cache[prompt] 
 
         # System message guiding the LLM
         sys_msg = (
-            '''You are an AI assistant tasked with selecting exactly one action from this list based on the user's input: capture_webcam, extract_clipboard, take_screenshot, open_word, open_excel, open_powerpoint, open_browser, open_youtube, None.
+            '''You are an AI assistant tasked with selecting exactly one action from this list based on the user's input: capture_webcam, extract_clipboard, take_screenshot, open_word, open_excel, open_powerpoint, open_browser, None.
             Respond with only one action word, exactly as listed. Choose 'None' if no action clearly applies.
             Key rules:
-            Select 'open_browser' only for explicit requests to open a web browser or search engine.
-            Choose 'open_youtube' only for direct YouTube-related requests.
+            Select 'open_browser' only for explicit requests to open a web browser or search engine or a website.
             For general information queries or topics not requiring a specific action, select 'None'.
             Do not infer actions. Only select an action if explicitly requested or clearly implied.
             Respond with the single chosen action word only. No explanations or additional text.
@@ -112,7 +111,6 @@ class HybridFunctionCaller:
                 raise ValueError("Empty response from LLM")
 
             selected_action = response
-            
             # Cache the result
             self.registry.cache[prompt] = (selected_action)
             self.registry.save_cache()  # Save cache after updating
@@ -122,7 +120,7 @@ class HybridFunctionCaller:
             print(ve)
             return "None"
 
-    def call(self, prompt: str) -> Tuple[str, float]:
+    def call(self, prompt: str) -> str:
         if len(prompt.split()) < 3:
             rule_based_result = self.rule_based_call(prompt)
             if rule_based_result[0] != "None":
@@ -137,5 +135,4 @@ class HybridFunctionCaller:
         
         if llm_result != "None":
             return llm_result
-        
-        return "None"  # If neither method is confident
+        return "None"  
