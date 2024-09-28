@@ -47,6 +47,12 @@
         "open youtube and search for blinding lights": "open_browser",
         "how am I looking?": "capture_webcam",
         "Yes can you tell me about bugatti more": "None",
-        "what do you think of buggati": "None"
+        "what do you think of buggati": "None",
+        "History of russia": "None",
+        "Histroy of India": "None",
+        "What is the meaning of life": "None",
+        "Can you open youtube": "open_browser",
+        "Search on youtube mere nishan": "open_browser",
+        "open twitter and search elon mush": "open_browser"
     }
 }

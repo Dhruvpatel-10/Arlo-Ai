@@ -152,5 +152,26 @@
       "platform": "google",
       "query": "Bugatti"
     }
+  },
+  {
+    "prompt": "Can you open youtube",
+    "action": {
+      "platform": "youtube",
+      "query": null
+    }
+  },
+  {
+    "prompt": "Search on youtube mere nishan",
+    "action": {
+      "platform": "youtube",
+      "query": "mere nishan"
+    }
+  },
+  {
+    "prompt": "open twitter and search elon mush",
+    "action": {
+      "platform": "twitter",
+      "query": "Elon Musk"
+    }
   }
 ]
