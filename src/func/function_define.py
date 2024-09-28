@@ -6,7 +6,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import subprocess
 from common.config import IMAGES_DIR
-
+import webbrowser
 
 # Load environment variables
 load_dotenv()
@@ -119,6 +119,9 @@ def open_powerpoint():
     except Exception as e:
         return f"Error opening Microsoft PowerPoint: {str(e)}"
 
-
-
-
+def handle_browser(url):
+    try:
+        webbrowser.open(url)
+        return "{url} opened successfully."
+    except Exception as e:
+        return f"Error opening browser: {str(e)}"

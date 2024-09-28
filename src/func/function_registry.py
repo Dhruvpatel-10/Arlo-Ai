@@ -3,13 +3,12 @@ import os
 import json
 from typing import Dict, Any, List, Tuple
 from common.config import CACHE_DIR
+from common.logger import logger
 from groq import Groq
-from dotenv import load_dotenv
-load_dotenv()
+from dotenv import load_dotenv;load_dotenv()
+
 
 groq_api = os.getenv("GROQ_API_FUNC")
-groq_client = Groq(api_key=groq_api)
-
 os.makedirs(CACHE_DIR, exist_ok=True)
 c_dir = os.path.join(CACHE_DIR, 'function_cache.json')
 
@@ -17,7 +16,7 @@ class FunctionRegistry:
     def __init__(self, cache_file=c_dir):
         self.functions: Dict[str, Dict[str, Any]] = {}
         self.patterns: Dict[str, re.Pattern] = {}
-        self.cache: Dict[str, Tuple[str, float]] = {}  # Cache for LLM results
+        self.cache: Dict[str, Tuple[str, float]] = {}
         self.cache_file = cache_file
         self.load_cache()  # Load cache from file if it exists
         self.load_functions_from_json()
@@ -46,6 +45,7 @@ class FunctionRegistry:
 
     def load_cache(self):
         try:
+            logger.info(f"Loading cache from {self.cache_file}")
             with open(self.cache_file, 'r') as f:
                 data = json.load(f)
                 self.cache = data.get("cache", {})
@@ -56,7 +56,9 @@ class FunctionRegistry:
 
     def save_cache(self):
         # Save both functions and cache to the cache_file
+        logger.info(f"Saving cache to {self.cache_file}")
         with open(self.cache_file, 'w') as f:
+
             json.dump({"functions": self.get_function_descriptions(), "cache": self.cache}, f, indent=4)
 
 
@@ -67,7 +69,7 @@ class HybridFunctionCaller:
     def rule_based_call(self, prompt: str) -> str:
         for name, pattern in self.registry.patterns.items():
             if pattern.search(prompt):
-                return name # High confidence for exact matches
+                return name 
 
         # Check the cache if the prompt was previously processed
         if prompt in self.registry.cache:
@@ -82,14 +84,7 @@ class HybridFunctionCaller:
 
         # System message guiding the LLM
         sys_msg = (
-            '''You are an AI assistant tasked with selecting exactly one action from this list based on the user's input: capture_webcam, extract_clipboard, take_screenshot, open_word, open_excel, open_powerpoint, open_browser, None.
-            Respond with only one action word, exactly as listed. Choose 'None' if no action clearly applies.
-            Key rules:
-            Select 'open_browser' only for explicit requests to open a web browser or search engine or a website.
-            For general information queries or topics not requiring a specific action, select 'None'.
-            Do not infer actions. Only select an action if explicitly requested or clearly implied.
-            Respond with the single chosen action word only. No explanations or additional text.
-            Your entire response must be one word from the list or 'None'.'''
+            '''You are an AI assistant tasked with selecting exactly one action from this list based on the user's input: capture_webcam, extract_clipboard, take_screenshot, open_word, open_excel, open_powerpoint, open_browser, None. Respond with only one action word, exactly as listed. Choose 'open_browser' for any request to open a specific website, search engine, or platform like YouTube. Respond with 'None' if no action clearly applies. You are not allowed to return any action that is not on the list. If the input does not explicitly map to an action in the list, return 'None.' Your response must contain exactly one word from the list.'''
         )
 
         # Messages to send to the LLM
@@ -99,7 +94,8 @@ class HybridFunctionCaller:
         ]
 
         # Call the LLM using GroqChat
-        chat_completion = groq_client.chat.completions.create(
+        groq_client = Groq(api_key=groq_api)
+        chat_completion =  groq_client.chat.completions.create(
             model="llama-3.1-70b-versatile",  # Use the appropriate model for GroqChat
             messages=function_convo,
         )
@@ -129,10 +125,13 @@ class HybridFunctionCaller:
         rule_based_result = self.rule_based_call(prompt)
         
         if rule_based_result != "None":
+            logger.info(f"Rule-based result: {rule_based_result}")
             return rule_based_result
         
         llm_result = self.llm_based_call(prompt)
         
         if llm_result != "None":
+            logger.info(f"LLM-based result: {llm_result}")
             return llm_result
+        logger.info(f"FROM CALL NO RESULT: RETURNING NONE")
         return "None"  

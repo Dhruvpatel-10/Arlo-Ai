@@ -33,43 +33,15 @@
         {
             "name": "open_browser",
             "description": "Open the default browser",
-            "pattern": "\\b(open|start)\\b.*\\b(browser|google|website)\\b"
-        },
-        {
-            "name": "open_youtube",
-            "description": "Open YouTube and optionally search for a query",
-            "pattern": "\\b(open|start)\\b.*\\b(youtube)\\b|\\b(search youtube for)\\b"
+            "pattern": "\b(?:open|start|launch|go(?: to)?)\b.*\b(?:browser|google|website|chrome|internet)\b|\b(?:search|find|look(?: up)?)\b.*\b(?:youtube|google)\b.*(?:for)?\b.*(?:video|song|info|query)?\b"
         }
     ],
     "cache": {
-        "hey how you doing": [
-            "None",
-            0.9
-        ],
-        "hey how are you": [
-            "None",
-            0.9
-        ],
-        "hey what's up": [
-            "None",
-            0.9
-        ],
-        "no tell me history of India": [
-            "None",
-            0.9
-        ],
-        "hey": [
-            "'None'",
-            0.9
-        ],
-        "what's behind me": [
-            "'capture_webcam'",
-            0.9
-        ],
         "Who was Maharana Pratap": "None",
         "Who was Shivji Maharaja": "None",
         "History of Russia": "None",
-        "I want to search on youtube about superman": "open_youtube",
-        "what's apple is": "None"
+        "I want to search on youtube about superman": "open_browser",
+        "what's apple is": "None",
+        "search for Happy birthday songs on youtube": "open_browser"
     }
 }

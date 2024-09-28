@@ -1,33 +1,35 @@
-import os
-# from func.vision_func import take_screenshot, web_cam_capture, get_clipboard_text, vision_prompt
+from collections import deque
 from src.llm.model import groq_prompt
 from src.llm.utils import split_and_combine_text
-from tts.audio import generate_audio_files
-from common.config import IMAGES_DIR
-from collections import deque
-from func.commands import process_command
+from tts.audio import generate_audio_files_multiprocessing
+from func.cmdpharser import process_command
 from func.function_registry import FunctionRegistry, HybridFunctionCaller
-from dotenv import load_dotenv
-from groq import Groq
-load_dotenv()
-
-groq_api = os.getenv("GROQ_API_FUNC")
-
-groq_client = Groq(api_key=groq_api)
-registry = FunctionRegistry()
-function_caller = HybridFunctionCaller(registry)
-
+from src.url.url_parser import SearchQueryFinder
+from src.common.logger import logger
 def main():
     print("\n[INFO] Initializing Assistant...")
+    registry = FunctionRegistry()
+    function_caller = HybridFunctionCaller(registry)
+    search_query = SearchQueryFinder()
     while True:
         user_prompt = input("\nUSER: ")
         # Call the hybrid function to determine the action
+        if user_prompt == "exit":
+            break
         action = function_caller.call(user_prompt)
         action = str(action)
         f_exe = None
         visual_context = None
         if action != "None":
-            f_exe, visual_context = process_command(action)
+            if 'open_browser':
+                 logger.info("OPENING BROWSER")
+                 Url_parser = search_query.find_query(prompt=user_prompt)
+                 f_exe, visual_context = process_command(command=action,url=Url_parser)
+                 logger.info(f"f_exe: {f_exe} and visual_context: {visual_context}")
+            else:
+                logger.info("PROCESSING COMMAND")
+                f_exe, visual_context = process_command(command=action, user_prompt=user_prompt)
+                logger.info(f"f_exe: {f_exe} and visual_context: {visual_context}")
         response = groq_prompt(prompt=user_prompt, img_context=visual_context, function_execution=f_exe)
 
         print("\n" + "="*50)
@@ -39,4 +41,4 @@ def main():
         paragraphs = split_and_combine_text(response)
         for para in paragraphs:
             text_queue.append(para) 
-        generate_audio_files(text_queue)
+        generate_audio_files_multiprocessing(text_queue)

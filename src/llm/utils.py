@@ -35,3 +35,14 @@ def split_and_combine_text(text, max_length=300, min_length=150):
             paragraphs.append(last_paragraph)
 
     return list(paragraphs)
+
+if __name__ == "__main__":
+    text = '''If you find that users are frequently requesting searches on other platforms, you can always expand the functionality later. You could also consider a hybrid approach where you implement Google and YouTube searches directly, and for other websites, you could use Google's "site:" search operator to provide a similar functionality indirectly.
+For example, if a user wants to search LinkedIn, you could construct a Google search query like this: "site:linkedin.com great resignation". This way, you're still using Google's search capabilities while targeting specific websites.
+In conclusion, unless you have a specific use case or user base that requires searches across many platforms, focusing on Google and YouTube is likely the most feasible, efficient, and user-friendly approach for your voice assistant.'''
+    text_queue = deque()
+    paragraphs = split_and_combine_text(text)
+    for para in paragraphs:
+        text_queue.append(para)
+
+    print(text_queue)

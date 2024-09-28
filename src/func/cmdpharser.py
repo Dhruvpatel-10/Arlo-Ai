@@ -1,15 +1,13 @@
-# src/func/cmdparser.py
-
 from func.function_define import *
 from src.common.logger import logger
 
-def process_command(command: str, user_prompt: str, query_cache, url_registry, browser_handle=None) -> tuple:
+def process_command(command: str,user_prompt: str = None, url: str = None) -> str:
     """
     Processes the given command and returns a tuple containing:
     - f_exe: Result of function execution (if any)
     - visual_context: Visual context information (if any)
     """
-    command = command.lower()  # Convert user input to lowercase
+    command = command.lower()  
     logger.info(f"COMMAND: {command}")
     visual_context = None  # Initialize visual context
     f_exe = None  # Initialize function execution result
@@ -59,13 +57,8 @@ def process_command(command: str, user_prompt: str, query_cache, url_registry, b
 
     # Command for opening default browser
     elif "open_browser" in command:
-        f_exe, visual_context = browser_handle.handle_browser_command(
-            user_prompt_str=user_prompt,
-            query_cache=query_cache,
-            url_registry=url_registry
-        )
+        f_exe = handle_browser(url=url)
         logger.info(f"BROWSER EXECUTION: {f_exe}")
         return f_exe, visual_context
-
     else:
         return f_exe, visual_context  # Both are None
