@@ -66,15 +66,20 @@ class SearchQueryFinder:
         """
         logger.info(f"LLM searching for PLATFORM AND QUERY...")
         system_prompt = '''
-    Objective:
-    Extract the search platform and query from the user input. If no valid query is found, return 'None' for the query.
-
-    Instructions:
-    1. Detect platforms like YouTube, Google, Reddit, etc.
-    2. Default to "google" if no platform is specified.
-    3. Extract the search query after removing keywords like "search for" or "look up."
-    4. If no query is found, set "query" to 'None'.
-    5. Return the result in the format: "Platform: <platform>\nQuery: <query>"
+        Objective:
+        Extract the search platform and query from user input. If no valid query is found, return 'None' for the query.
+        Instructions:
+        Detect platforms (e.g., Google, YouTube). Default to "Google" if none specified.
+        Extract the query, removing phrases like "search for" or "look up."
+        If no valid query exists, set the query to 'None.'
+        Return the result in the format:
+        Platform: <platform>
+        Query: <query or 'None'>
+        Example:
+        Input: "search Python on YouTube"
+        Output:
+        Platform: YouTube
+        Query: Python
         '''
 
         conversation = [

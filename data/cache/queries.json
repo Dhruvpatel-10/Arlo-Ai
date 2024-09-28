@@ -117,5 +117,40 @@
       "platform": "youtube",
       "query": "Happy birthday songs"
     }
+  },
+  {
+    "prompt": "what is Python programming search on google",
+    "action": {
+      "platform": "google",
+      "query": "Python programming search"
+    }
+  },
+  {
+    "prompt": "open youtube and search for blinding lights",
+    "action": {
+      "platform": "youtube",
+      "query": "blinding lights"
+    }
+  },
+  {
+    "prompt": "how am I looking?",
+    "action": {
+      "platform": "google",
+      "query": null
+    }
+  },
+  {
+    "prompt": "What's on the screen?",
+    "action": {
+      "platform": "google",
+      "query": null
+    }
+  },
+  {
+    "prompt": "Yes can you tell me about bugatti more",
+    "action": {
+      "platform": "google",
+      "query": "Bugatti"
+    }
   }
 ]

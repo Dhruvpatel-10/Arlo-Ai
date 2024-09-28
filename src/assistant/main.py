@@ -6,6 +6,8 @@ from func.cmdpharser import process_command
 from func.function_registry import FunctionRegistry, HybridFunctionCaller
 from src.url.url_parser import SearchQueryFinder
 from src.common.logger import logger
+
+
 def main():
     print("\n[INFO] Initializing Assistant...")
     registry = FunctionRegistry()

@@ -84,7 +84,7 @@ class HybridFunctionCaller:
 
         # System message guiding the LLM
         sys_msg = (
-            '''You are an AI assistant tasked with selecting exactly one action from this list based on the user's input: capture_webcam, extract_clipboard, take_screenshot, open_word, open_excel, open_powerpoint, open_browser, None. Respond with only one action word, exactly as listed. Choose 'open_browser' for any request to open a specific website, search engine, or platform like YouTube. Respond with 'None' if no action clearly applies. You are not allowed to return any action that is not on the list. If the input does not explicitly map to an action in the list, return 'None.' Your response must contain exactly one word from the list.'''
+            '''You are an AI assistant tasked with selecting exactly one action from this list based on the user's input: capture_webcam, extract_clipboard, take_screenshot, open_word, open_excel, open_powerpoint, open_browser, None. Respond with only one action word, exactly as listed. Choose 'open_browser' for any request to open a specific website, search engine, or platform like YouTube. Respond with 'None' if no action clearly applies. You are not allowed to return any action that is not on the list. If the input does not explicitly map to an action in the list, return 'None.' Your response must contain exactly one word from the list. And also know that user prompt is forwarded to LLM any way so if the prompt is like a LLM can answer it then return 'None'. '''
         )
 
         # Messages to send to the LLM
@@ -96,7 +96,7 @@ class HybridFunctionCaller:
         # Call the LLM using GroqChat
         groq_client = Groq(api_key=groq_api)
         chat_completion =  groq_client.chat.completions.create(
-            model="llama-3.1-70b-versatile",  # Use the appropriate model for GroqChat
+            model="llama-3.2-3b-preview",  # Use the appropriate model for GroqChat
             messages=function_convo,
         )
 
@@ -129,9 +129,6 @@ class HybridFunctionCaller:
             return rule_based_result
         
         llm_result = self.llm_based_call(prompt)
-        
-        if llm_result != "None":
-            logger.info(f"LLM-based result: {llm_result}")
-            return llm_result
-        logger.info(f"FROM CALL NO RESULT: RETURNING NONE")
-        return "None"  
+        logger.info(f"LLM-based result: {llm_result}")
+        return llm_result
+         

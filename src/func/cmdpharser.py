@@ -57,8 +57,8 @@ def process_command(command: str,user_prompt: str = None, url: str = None) -> st
 
     # Command for opening default browser
     elif "open_browser" in command:
+        logger.info(f"BROWSER EXECUTION")
         f_exe = handle_browser(url=url)
-        logger.info(f"BROWSER EXECUTION: {f_exe}")
         return f_exe, visual_context
     else:
-        return f_exe, visual_context  # Both are None
+        return f_exe, visual_context  

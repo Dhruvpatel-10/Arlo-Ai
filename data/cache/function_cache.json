@@ -42,6 +42,11 @@
         "History of Russia": "None",
         "I want to search on youtube about superman": "open_browser",
         "what's apple is": "None",
-        "search for Happy birthday songs on youtube": "open_browser"
+        "search for Happy birthday songs on youtube": "open_browser",
+        "what is Python programming search on google": "open_browser",
+        "open youtube and search for blinding lights": "open_browser",
+        "how am I looking?": "capture_webcam",
+        "Yes can you tell me about bugatti more": "None",
+        "what do you think of buggati": "None"
     }
 }
