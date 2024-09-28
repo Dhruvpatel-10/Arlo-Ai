@@ -1,60 +1,58 @@
-import multiprocessing
-from multiprocessing import Queue
-from collections import deque
-from .engine import generate_audio, play_audio_sequence
-from common.config import AUDIO_DIR
-import subprocess  # Ensure subprocess is imported for exception handling
+from multiprocessing import Queue, Process, Pool
+from .engine import generate_audio, play_audio
+from common.logger import logger as logging
 
-def generate_audio_process(text_queue: Queue, audio_queue: Queue):
+
+def audio_generator_worker(text_chunk):
+    try:
+        logging.info(f"Generating audio for chunk: {text_chunk[:30]}...")
+        mp3_file = generate_audio(text=text_chunk)
+        logging.info(f"Audio generated for chunk: {text_chunk[:30]}...")
+        return mp3_file
+    except Exception as e:
+        logging.error(f"Error generating audio for '{text_chunk}': {e}")
+        return None
+
+def audio_generator(text_queue: Queue, audio_queue: Queue, pool_size=4):
+    pool = Pool(processes=pool_size)
     while True:
         text_chunk = text_queue.get()
-        if text_chunk is None:  # Sentinel value to indicate completion
+        if text_chunk is None:
+            logging.info("Audio Generator received sentinel. Exiting.")
+            pool.close()
+            pool.join()
+            audio_queue.put(None)  # Pass sentinel to audio player
             break
-        try:
-            mp3_file = generate_audio(text=text_chunk)
+        # Submit the text chunk to the pool
+        result = pool.apply_async(audio_generator_worker, args=(text_chunk,))
+        mp3_file = result.get()
+        if mp3_file:
             audio_queue.put(mp3_file)
-        except subprocess.CalledProcessError as e:
-            print(f"Error in generating audio for text '{text_chunk}': {e}")
 
-    audio_queue.put(None)  
+def audio_player(audio_queue: Queue):
 
-def play_audio_process(audio_queue: Queue):
     while True:
         mp3_file = audio_queue.get()
-        if mp3_file is None:  
+        if mp3_file is None:
+            # Sentinel value received, terminate the player
+            logging.info("Audio Player received sentinel. Exiting.")
             break
-        play_audio_sequence([mp3_file])
+        try:
+            logging.info(f"Playing audio: {mp3_file}")
+            play_audio(mp3_file)
+            logging.info(f"Finished playing: {mp3_file}")
+        except Exception as e:
+            logging.error(f"Error playing audio '{mp3_file}': {e}")
+            # Optionally, handle playback errors here
 
-def generate_audio_files_multiprocessing(text_queue_input):
-    # Create multiprocessing queues
-    text_queue = multiprocessing.Queue()
-    audio_queue = multiprocessing.Queue()
+def start_audio_processes(text_queue: Queue, audio_queue: Queue):
+   
+    generator_process = Process(target=audio_generator, args=(text_queue, audio_queue), name="AudioGenerator")
+    player_process = Process(target=audio_player, args=(audio_queue,), name="AudioPlayer")
 
-    # Populate the text_queue
-    for item in text_queue_input:
-        text_queue.put(item)
-    text_queue.put(None)  # Sentinel value to indicate no more data
+    generator_process.start()
+    player_process.start()
 
-    # Create the producer and consumer processes
-    producer_process = multiprocessing.Process(target=generate_audio_process, args=(text_queue, audio_queue))
-    consumer_process = multiprocessing.Process(target=play_audio_process, args=(audio_queue,))
+    logging.info("Audio Generator and Audio Player processes started.")
 
-    # Start both processes
-    producer_process.start()
-    consumer_process.start()
-
-    # Wait for both processes to finish
-    producer_process.join()
-    consumer_process.join()
-
-if __name__ == "__main__":
-    # Sample text data
-    text_queue = deque([
-        "Hello, this is the first text.",
-        "This is the second piece of text.",
-        "And here is the third one."
-        # Add more text chunks as needed
-    ])
-
-    # Call the multiprocessing version
-    generate_audio_files_multiprocessing(text_queue, voice='en-US-AvaNeural', audio_dir=AUDIO_DIR)
+    return generator_process, player_process

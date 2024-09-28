@@ -2,9 +2,20 @@ import os
 from random import randint
 import subprocess
 from playsound import playsound
+from src.common.logger import logger as logging
 from src.common.config import AUDIO_DIR
 
 def generate_audio(text: str, voice: str = "en-US-AvaNeural") -> str:
+    """
+    Generates an MP3 file from the provided text using edge-tts.
+
+    Args:
+        text (str): The text to convert to speech.
+        voice (str): The voice to use for speech synthesis.
+
+    Returns:
+        str: The path to the generated MP3 file.
+    """
     # Clean and format text
     limited_hash = randint(0, 145269)
     text = os.linesep.join([s.strip().replace("*", "") for s in text.splitlines() if s.strip()])
@@ -39,7 +50,7 @@ def generate_audio(text: str, voice: str = "en-US-AvaNeural") -> str:
         )
 
         if result.returncode != 0:
-            print(f"Error generating audio for text '{text}':\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
+            logging.error(f"Error generating audio for text '{text}':\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
             raise subprocess.CalledProcessError(result.returncode, command, output=result.stdout, stderr=result.stderr)
 
     finally:
@@ -50,16 +61,18 @@ def generate_audio(text: str, voice: str = "en-US-AvaNeural") -> str:
     return mp3_file
 
 def play_audio(mp3_file: str) -> None:
+    """
+    Plays the specified MP3 file and removes it after playback.
+
+    Args:
+        mp3_file (str): The path to the MP3 file to play.
+    """
     if os.path.exists(mp3_file):
         try:
             playsound(mp3_file)
             os.remove(mp3_file)
+            logging.info(f"Deleted temporary audio file: {mp3_file}")
         except Exception as e:
-            print(f"Failed to play the audio: {e}")
+            logging.error(f"Failed to play the audio: {e}")
     else:
-        print(f"File not found: {mp3_file}")
-
-def play_audio_sequence(mp3_files: list) -> None:
-    # Play a sequence of audio files
-    for mp3_file in mp3_files:
-        play_audio(mp3_file)
+        logging.error(f"File not found: {mp3_file}")
