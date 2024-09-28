@@ -1,7 +1,8 @@
 import os
 from groq import Groq
 from dotenv import load_dotenv
-
+from src.common.config import save_history
+from src.common.logger import logger
 load_dotenv()
 groq_api = os.getenv("GROQ_API")
 groq_client = Groq(api_key=groq_api)
@@ -13,19 +14,29 @@ sys_msg = (
 
     Keep your language simple and easy to pronounce. Avoid actions or non-verbal expressions (e.g., "(laughs)", "(sighs)", "(winks)") in your replies. Do not solicit images or other input unless provided by the user.
 
-    Prioritize short and engaging replies, using medium-length responses only when necessary to provide complete information.'''
+    Prioritize short and engaging replies. '''
     )
 
-convo = [{"role": "system", "content": sys_msg}]
-def groq_prompt(prompt, img_context,function_execution):
+
+def groq_prompt(prompt, img_context,function_execution, history):
     if img_context:
         prompt = f'USER PROMPT: {prompt}\nIMAGE CONTEXT: {img_context}'
+        logger.info(prompt)
     if function_execution:
         prompt = f'USER PROMPT: {prompt}\n FUNCTION_EXECUTION: {function_execution}'
+        logger.info(prompt)
+
+    convo = history
     convo.append({"role": "user", "content": prompt})
-    chat_completion = groq_client.chat.completions.create(model="llama-3.1-70b-versatile", messages=convo)
-    response = chat_completion.choices[0].message
-    convo.append(response)
-    response_text = response.content
-    response_text = response_text.translate(str.maketrans('', '', '**\*'))
+    convo2 = [{"role": "system", "content": sys_msg}] + convo
+
+    chat_completion = groq_client.chat.completions.create(model="llama-3.1-70b-versatile", messages=convo2)
+
+    response = chat_completion.choices[0].message.content
+    response_text = response.translate(str.maketrans('', '', '**\*'))
+    convo.append(({"role": "assistant", "content":response_text}))
+
+    if len(convo) > 20:  # 10 user prompts + 10 responses
+        convo = convo[-20:]
+    save_history(convo)
     return response_text

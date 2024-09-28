@@ -18,7 +18,9 @@ logger.add(log_file_path,
     level="INFO"             # Minimum level of logs to capture
 )
 
-def delete_audio_files():
+
+
+def delete_af():
     logger.info("Cleaning up generated audio files...")
     for audio_file in Path(AUDIO_DIR).glob('*.mp3'):
         try:
@@ -29,11 +31,20 @@ def delete_audio_files():
 
 def signal_handler(sig, frame):
     logger.info(f"Signal {sig} received. Shutting down and cleaning up...")
-    delete_audio_files()
+    delete_af()
 
     logger.info("Audio processes have been terminated. Goodbye!")
     sys.exit(0)
 
+def revlog(log_file_path=log_file_path):
+    """Reverse the contents of the log file."""
+    if os.path.exists(log_file_path):
+        with open(log_file_path, 'r') as file:
+            lines = file.readlines()
+        
+        with open(log_file_path, 'w') as file:
+            file.writelines(reversed(lines))
+            print("Sucess")
+
 if __name__ == "__main__":
-    print(AUDIO_DIR)
-    delete_audio_files()
+    revlog()

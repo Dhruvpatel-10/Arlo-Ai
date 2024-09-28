@@ -173,5 +173,19 @@
       "platform": "twitter",
       "query": "Elon Musk"
     }
+  },
+  {
+    "prompt": "what was my last prompt?",
+    "action": {
+      "platform": "youtube",
+      "query": "<query or 'None'>"
+    }
+  },
+  {
+    "prompt": "what's best thing about humanity",
+    "action": {
+      "platform": "google",
+      "query": "1. **Detecting the platform:**"
+    }
   }
 ]
