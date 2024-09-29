@@ -2,7 +2,6 @@ from loguru import logger
 import os
 from .config import CACHE_DIR, AUDIO_DIR
 from pathlib import Path
-import sys
 
 # Configure logging
 log_file_path = os.path.join(CACHE_DIR, 'logs.log')  
@@ -14,11 +13,9 @@ logger.add(log_file_path,
     rotation="2 MB",         # Rotate after the log file reaches 1 MB
     retention="10 days",     # Keep log files for 10 days
     compression="zip",       # Compress old log files
-    format="{time} {level} {message} ",  # Log format
+    format="{module} {level} {message} ", 
     level="INFO"             # Minimum level of logs to capture
 )
-
-
 
 def delete_af():
     logger.info("Cleaning up generated audio files...")
@@ -29,22 +26,7 @@ def delete_af():
         except OSError as e:
             logger.error(f"Error deleting file {audio_file}: {e}")
 
-def signal_handler(sig, frame):
+
+def signal_handler(sig,frame):
     logger.info(f"Signal {sig} received. Shutting down and cleaning up...")
     delete_af()
-
-    logger.info("Audio processes have been terminated. Goodbye!")
-    sys.exit(0)
-
-def revlog(log_file_path=log_file_path):
-    """Reverse the contents of the log file."""
-    if os.path.exists(log_file_path):
-        with open(log_file_path, 'r') as file:
-            lines = file.readlines()
-        
-        with open(log_file_path, 'w') as file:
-            file.writelines(reversed(lines))
-            print("Sucess")
-
-if __name__ == "__main__":
-    revlog()

@@ -7,3 +7,4 @@ webcam.jpg
 import_test.py
 data/audio/*.mp3
 data/cache/*.log
+data/cache/history.json

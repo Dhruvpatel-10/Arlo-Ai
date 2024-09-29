@@ -175,17 +175,31 @@
     }
   },
   {
-    "prompt": "what was my last prompt?",
+    "prompt": "Search on twitter about openai",
     "action": {
-      "platform": "youtube",
-      "query": "<query or 'None'>"
+      "platform": "twitter",
+      "query": "openai"
     }
   },
   {
-    "prompt": "what's best thing about humanity",
+    "prompt": "open stackover flow and search for python problems",
     "action": {
-      "platform": "google",
-      "query": "1. **Detecting the platform:**"
+      "platform": "stackoverflow",
+      "query": "python problems"
+    }
+  },
+  {
+    "prompt": "open youtube and search for search by nf",
+    "action": {
+      "platform": "youtube",
+      "query": "search by nf"
+    }
+  },
+  {
+    "prompt": "open github",
+    "action": {
+      "platform": "github",
+      "query": null
     }
   }
 ]

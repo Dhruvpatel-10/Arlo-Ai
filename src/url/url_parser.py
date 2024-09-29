@@ -66,20 +66,31 @@ class SearchQueryFinder:
         """
         logger.info(f"LLM searching for PLATFORM AND QUERY...")
         system_prompt = '''
-        Objective:
-        Extract the search platform and query from user input. If no valid query is found, return 'None' for the query.
-        Instructions:
-        Detect platforms (e.g., Google, YouTube). Default to "Google" if none specified.
-        Extract the query, removing phrases like "search for" or "look up."
-        If no valid query exists, set the query to 'None.'
-        Return the result in the format:
-        Platform: <platform>
-        Query: <query or 'None'>
-        Example:
-        Input: "search Python on YouTube"
-        Output:
-        Platform: YouTube
-        Query: Python
+Objective: Detect the search platform (e.g., YouTube, Facebook) from user input. Extract the search query if available. If no search query is specified, return "null" for the query.
+
+Platform Detection:
+Identify the platform directly mentioned in the input (e.g., YouTube, Facebook, GitHub, or any website). If no platform is explicitly mentioned, use "Google" as the default platform.
+
+Query Extraction:
+Remove phrases such as "search for", "look up", or "find" to extract the core search query. If no valid search query exists, return "null".
+
+Return Format:
+Always return the detected platform, even if no query is present. Ensure "null" is returned if no search query is provided.
+
+Expected Return Format:
+Platform: <platform> (Do not default to Google if platform is present)
+Query: <query> or "null"
+Example 1:
+Input: "search Python on YouTube"
+Output:
+    Platform: YouTube
+    Query: Python
+
+Example 2:
+Input: "open Facebook"
+Output:
+    Platform: Facebook
+    Query: null
         '''
 
         conversation = [
@@ -101,6 +112,10 @@ class SearchQueryFinder:
 
             platform = platform_match.group(1).strip().lower() if platform_match else None
             query = query_match.group(1).strip() if query_match and query_match.group(1).lower() != 'none' else None
+
+            if query is not None and query.lower() in ['none', 'null', '']:
+                query = None
+
             logger.info(f"PLATFORM: {platform} | QUERY: {query}")
             return platform, query
 
@@ -109,28 +124,34 @@ class SearchQueryFinder:
             return None, None
 
     def _construct_url(self, platform: str, query: str, default_search_engine="google") -> str:
-        """
-        Constructs a search URL for the specified platform and query.
-        Falls back to a Google search for the platform if the platform doesn't have a search path.
-        """
+
         platform = platform.lower()
         logger.info(f"Platform: {platform} | Query: {query}")
-        url_info = self.urls.get(platform, self.urls[default_search_engine])
-        base_url = url_info["base_url"]
-        search_path = url_info.get("search_path", "")
+        try:
+            url_info = self.urls[platform]  
+            base_url = url_info["base_url"]
+            search_path = url_info.get("search_path")
+        except KeyError:
+            base_url = None
+            search_path = None
 
-        if search_path and query:
+        if base_url and search_path and query:
             encoded_query = urllib.parse.quote(query)
-            logger.info(f"Inside IF Constructed URL: {base_url}{search_path}{encoded_query}")
+            logger.info(f"Constructed URL with search query: {base_url}{search_path}{encoded_query}")
             return f"{base_url}{search_path}{encoded_query}"
-        elif not search_path and query:
-            # If there's no search path, use Google to search for "platform query"
+
+        elif base_url and not search_path and not query:
+            logger.info(f"Constructed URL with just base URL: {base_url}")
+            return base_url
+
+        elif search_path is None:  
             google_url_info = self.urls[default_search_engine]
             google_base_url = google_url_info["base_url"]
             google_search_path = google_url_info["search_path"]
-            encoded_query = urllib.parse.quote(f"{platform} {query}")
-            logger.info(f"INSIDE ELIF Constructed URL: {google_base_url}{google_search_path}{encoded_query}")
+            encoded_query = urllib.parse.quote(f"{platform} {query or ''}")
+            logger.info(f"Google fallback URL: {google_base_url}{google_search_path}{encoded_query}")
+            logger.info(f"Constructed URL with google search: {encoded_query}")
             return f"{google_base_url}{google_search_path}{encoded_query}"
+
         else:
-            logger.info(f"INSIDE ELSE Constructed URL: {base_url}")
-            return f"{base_url}"
+            return None
