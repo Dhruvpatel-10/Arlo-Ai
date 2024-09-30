@@ -1,0 +1,3 @@
+[submodule "lexi"]
+	path = lexi
+	url = https://github.com/dhyey-21/lexi.git
