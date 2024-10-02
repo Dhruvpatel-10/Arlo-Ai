@@ -38,7 +38,7 @@
         {
             "name": "none",
             "description": "Handle queries that typically result in None responses",
-            "pattern": "\\b(hey|hello|hi|what's up|what do you think|what's your opinion|tell me about|what is the meaning of|suggest|recommend|should i|what should|explain me)\\b|\\b(who|what|when|where|why|how)\\b.*\\b(is|are|was|were|will|do|does|did)\\b|\\b(can you|could you)\\b.*\\b(tell|explain|describe)\\b|^[a-zA-Z0-9]{1,2}$"
+            "pattern": "\\b(hey|hello|hi|what's up|what do you think|what's your opinion|tell me about|what is the meaning of|suggest|recommend|should i|what should|explain me)\\b|\\b(who|what|when|where|why|how)\\b.*\\b(is|are|was|were|will|do|does|did)\\b|\\b(can you|could you)\\b.*\\b(tell|explain|describe)\\b|^[a-zA-Z0-9]{1,2}$|^\\w+$"
         }
     ],
     "cache": {
@@ -120,6 +120,18 @@
         "Who has the most intersting tech in the world": "None",
         "Some intersting facts in detail": "None",
         "How's you doing buddy": "None",
-        "As usaul ": "None"
+        "As usaul ": "None",
+        "Spoon tone means": "None",
+        "Why USA become so great": "None",
+        "Little more in detail": "open_browser",
+        "I'm tell me some instresting facts which I never herad of": "None",
+        "I already herad this ": "None",
+        "tell me 6 facts which in spoony tone and don't use numbers to list them": "None",
+        "I herad all of that": "None",
+        "this one was new nice": "None",
+        "open youtube and search Zanzibar": "open_browser",
+        "Tell me 10 erotic facts about ancient greek": "None",
+        "Now about Rome naughty and more erotic tales": "None",
+        "Now about India": "None"
     }
 }

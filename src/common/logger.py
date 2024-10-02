@@ -17,7 +17,7 @@ logger.add(log_file_path,
     rotation="2 MB",         # Rotate after the log file reaches 1 MB
     retention="10 days",     # Keep log files for 10 days
     compression="zip",       # Compress old log files
-    format="{level} {file} {function} <bold>{message}</bold>", 
+    format="{level} | {file} | {function} |<bold>{message}</bold>", 
     level="INFO"             # Minimum level of logs to capture
 )
 
@@ -25,7 +25,7 @@ logger.add(error_log_file,
     rotation="1 MB",         # Rotate after the log file reaches 1 MB
     retention="5 days",      # Keep log files for 5 days
     compression="zip",       # Compress old log files
-    format="{level} {time} {message}",
+    format="{level} | {file} | {message}",
     level="ERROR",           # Only capture 'ERROR' and above
     filter=lambda record: record["level"].name == "ERROR"  # Custom filter for ERROR logs
 )
@@ -33,7 +33,7 @@ logger.add(success_log_file,
     rotation="1 MB",         # Rotate after the log file reaches 1 MB
     retention="5 days",      # Keep log files for 5 days
     compression="zip",       # Compress old log files
-    format="{level} {time} {message}",
+    format="{level} | {file} | {message}",
     level="SUCCESS",          
     filter=lambda record: record["level"].name == "SUCCESS" 
 )
@@ -48,6 +48,4 @@ def delete_af():
             logger.error(f"Error deleting file {audio_file}: {e}")
 
 
-def signal_handler(sig,frame):
-    logger.info(f"Signal {sig} received. Shutting down and cleaning up...")
-    delete_af()
+    

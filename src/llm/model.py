@@ -1,7 +1,7 @@
-import os
+import os,json
 from groq import Groq, InternalServerError, APIConnectionError
 from dotenv import load_dotenv
-from src.common.config import save_history
+from src.common.config import JSON_DIR
 from src.common.logger import logger
 from time import sleep
 load_dotenv()
@@ -24,9 +24,24 @@ sys_msg = (
     Detailed Explanations: max_tokens = 250 '''
     )
 
-def groq_prompt(prompt, img_context, function_execution, history, max_retries=3, retry_delay=0.5):
-    convo = history.copy()  # Create a copy to avoid modifying the original history
+history_file = os.path.join(JSON_DIR, 'history.json')
 
+def load_history():
+    """Load conversation history from a JSON file."""
+    if os.path.exists(history_file):
+        with open(history_file, 'r') as f:
+            return json.load(f)
+    return []
+
+def save_history(history):
+    """Save conversation history to a JSON file."""
+    with open(history_file, 'w') as f:
+        json.dump(history, f, indent=4)
+
+def groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_delay=0.5):
+
+    convo = load_history()  
+    
     if img_context:
         prompt = f'USER PROMPT: {prompt}\nIMAGE CONTEXT: {img_context}'
         logger.info(prompt)

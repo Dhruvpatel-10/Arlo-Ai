@@ -201,5 +201,26 @@
       "platform": "github",
       "query": null
     }
+  },
+  {
+    "prompt": "Search for News on google",
+    "action": {
+      "platform": "google",
+      "query": "News"
+    }
+  },
+  {
+    "prompt": "google",
+    "action": {
+      "platform": "google",
+      "query": null
+    }
+  },
+  {
+    "prompt": "open youtube and search Zanzibar",
+    "action": {
+      "platform": "youtube",
+      "query": "Zanzibar"
+    }
   }
 ]

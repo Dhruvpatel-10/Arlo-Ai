@@ -122,6 +122,6 @@ def open_powerpoint():
 def handle_browser(url):
     try:
         webbrowser.open(url)
-        return "{url} opened successfully."
+        return f"{url} opened successfully."
     except Exception as e:
         return f"Error opening browser: {str(e)}"

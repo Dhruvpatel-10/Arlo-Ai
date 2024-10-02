@@ -2,11 +2,7 @@ from func.function_define import *
 from src.common.logger import logger
 
 def process_command(command: str,user_prompt: str = None, url: str = None) -> str:
-    """
-    Processes the given command and returns a tuple containing:
-    - f_exe: Result of function execution (if any)
-    - visual_context: Visual context information (if any)
-    """
+
     command = command.lower()  
     logger.info(f"COMMAND: {command}")
     visual_context = None  # Initialize visual context

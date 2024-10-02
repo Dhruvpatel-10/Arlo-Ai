@@ -6,12 +6,12 @@ from typing import Dict, Any, Tuple, Optional
 from functools import lru_cache
 from dotenv import load_dotenv;load_dotenv()
 import groq
-from common.config import CACHE_DIR
+from common.config import JSON_DIR
 from src.common.logger import logger
 
 # Define cache directories
-U_DIR = os.path.join(CACHE_DIR, 'urls.json')
-Q_DIR = os.path.join(CACHE_DIR, 'queries.json')
+U_DIR = os.path.join(JSON_DIR, 'urls.json')
+Q_DIR = os.path.join(JSON_DIR, 'queries.json')
 GROQ_API = os.getenv("GROQ_URL")
 
 class SearchQueryFinder:
@@ -75,7 +75,7 @@ Query Extraction:
 Remove phrases such as "search for", "look up", or "find" to extract the core search query. If no valid search query exists, return "null".
 
 Return Format:
-Always return the detected platform, even if no query is present. Ensure "null" is returned if no search query is provided.
+Always return the detected platform, even if no query is present. Ensure only this word "null" is returned if no search query is provided.
 
 Expected Return Format:
 Platform: <platform> (Do not default to Google if platform is present)

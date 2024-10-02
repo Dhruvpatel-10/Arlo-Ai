@@ -1,38 +1,46 @@
-from queue import Queue
+# main.py
+import asyncio
+from asyncio import Queue, Event
+import aioconsole
+
 from src.llm.model import groq_prompt
 from src.llm.utils import split_and_enqueue_response 
-from tts.audio import start_audio_threads
+from tts.audio import start_audio_workers
 from func.cmdpharser import process_command
-from func.function_registry import FunctionRegistry, HybridFunctionCaller
+from func.function_registry import FunctionRegistryAndCaller
 from src.url.url_parser import SearchQueryFinder
-from src.common.logger import logger, delete_af, signal_handler
-from src.common.config import load_history
-import signal
+from src.common.logger import logger, delete_af
+import src.common.config as config
 
-# Register signal handlers
-signal.signal(signal.SIGINT, signal_handler)  
-signal.signal(signal.SIGTERM, signal_handler)
-
-def main():
+async def main():
     print("\n[INFO] Initializing Assistant...")
     logger.info("Initializing Assistant...")
     delete_af()
-    history = load_history()
-    registry = FunctionRegistry()
-    function_caller = HybridFunctionCaller(registry)
+    
+    function_caller = await FunctionRegistryAndCaller.create()
     search_query = SearchQueryFinder()
     text_queue = Queue(maxsize=100)
     audio_queue = Queue(maxsize=100)
-    threads = start_audio_threads(text_queue, audio_queue, pool_size=2)
     
-    try:
-        while True:
-            user_prompt = input("\nUSER: ")
+    # Start audio workers
+    workers = await start_audio_workers(text_queue, audio_queue, pool_size=2)
+    
+    shutdown_event = Event()
+    
+    async def user_input_loop():
+        while not shutdown_event.is_set():
+            try:
+                user_prompt = await aioconsole.ainput("\nUSER: ")
+            except (EOFError, KeyboardInterrupt):
+                logger.info("User triggered exit.")
+                shutdown_event.set()
+                break
             if user_prompt.lower() in ["exit", "q"]:
                 logger.info("Exit command received. Shutting down.")
+                shutdown_event.set()
                 break
             
-            action = function_caller.call(user_prompt)
+            action = await function_caller.call(user_prompt)
             action = str(action)
             f_exe = None
             visual_context = None
@@ -47,40 +55,49 @@ def main():
                     f_exe, visual_context = process_command(command=action, user_prompt=user_prompt)
                 logger.info(f"f_exe: {f_exe} and visual_context: {visual_context}")
             
-            response = groq_prompt(prompt=user_prompt, img_context=visual_context, function_execution=f_exe, history=history)
+            response = groq_prompt(prompt=user_prompt, img_context=visual_context, function_execution=f_exe)
 
             print("\n" + "="*50)
             print(f"ASSISTANT: {response}")
             print("="*50)
+            
             if len(response.split()) > 20:
                 logger.info("Response too long. Splitting and enqueuing response.")
-                split_and_enqueue_response(response, text_queue)
+                await split_and_enqueue_response(response, text_queue)
             else:
                 logger.info("Less than 20 words. Enqueuing response.")
-                text_queue.put(response)
+                async with config.index_lock:
+                    current_index = config.global_index_counter
+                    config.global_index_counter += 1
+                logger.success(f"global_index_counter: {current_index}, Response: {response[:10]}")
+                await text_queue.put((current_index, response))
+                logger.info(f"global_index_counter: {config.global_index_counter}")
 
-    except KeyboardInterrupt:
-        logger.error("Received KeyboardInterrupt. Exiting.")
+    try:
+        await user_input_loop()
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
     finally:
-        # Clean up code (same as before)
+        # Initiate shutdown
+        logger.info("Initiating shutdown sequence.")
+
+        # Wait for queues to be processed
+        logger.info("Sending sentinel to audio workers.")
+        for _ in workers:
+            await text_queue.put((None, None))  # Send sentinel to audio generators
+            await audio_queue.put((None,None))
+        logger.info("Waiting for audio workers to finish.")
+        await asyncio.gather(*workers, return_exceptions=True)  # Wait for all workers to finish
         logger.info("Waiting for all tasks in text_queue to be processed.")
-        text_queue.join()
+        await text_queue.join()
         logger.info("All tasks in text_queue have been processed.")
         logger.info("Waiting for all tasks in audio_queue to be processed.")
-        audio_queue.join()
+        await audio_queue.join()
         logger.info("All tasks in audio_queue have been processed.")
 
-        logger.info("Sending sentinel to audio threads.")
-        for _ in threads:
-            text_queue.put(None)
+        # Send sentinel to audio workers
 
-        logger.info("Waiting for audio threads to finish.")
-        for thread in threads:
-            thread.join()
-            logger.info(f"Joined thread: {thread.name}")
+        # Wait for audio workers to finish
         
-        logger.info("All audio threads have finished. Terminating assistant.")
+        logger.info("All audio workers have finished. Terminating assistant.")
         logger.info("Assistant terminated. Goodbye!")
-
-if __name__ == "__main__":
-    main()

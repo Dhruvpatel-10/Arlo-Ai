@@ -4,8 +4,8 @@ pyperclip
 python-dotenv
 opencv-python 
 pillow 
-nltk 
 edge-tts
 playsound==1.2.2
 loguru
-spacy
+blingfire
+aiofiles
