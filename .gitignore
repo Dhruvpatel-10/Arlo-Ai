@@ -11,5 +11,5 @@ test.py
 screenshot.jpg
 webcam.jpg
 import_test.py
-data/audio/*
-data/images/*
+data/audio/*.mp3
+data/images/*.jpg
