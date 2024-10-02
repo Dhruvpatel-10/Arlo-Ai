@@ -18,20 +18,24 @@ class FunctionRegistry:
         self.patterns: Dict[str, re.Pattern] = {}
         self.cache: Dict[str, Tuple[str, float]] = {}
         self.cache_file = cache_file
-        self.load_cache()  # Load cache from file if it exists
-        self.load_functions_from_json()
+        self.load_data()
 
-    def load_functions_from_json(self):
+    def load_data(self):
         try:
+            logger.info(f"Loading data from {self.cache_file}")
             with open(self.cache_file, 'r') as f:
                 data = json.load(f)
+                # Load and register functions
                 for function in data.get("functions", []):
-                    self.register(function["name"], function["description"], function["pattern"])
+                    self.register(function["name"], function["description"], function.get("pattern", ""))
+                # Load cache
                 self.cache = data.get("cache", {})
+
         except FileNotFoundError:
-            print(f"{self.cache_file} not found. No functions loaded.")
+            logger.error(f"Cache file not found: {self.cache_file}")
+            self.cache = {}
         except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
+            logger.error(f"Error loading data: {e}")
 
     def register(self, name: str, description: str, pattern: str):
         # Store both description and pattern in self.functions
@@ -42,17 +46,6 @@ class FunctionRegistry:
         # Include pattern in the function descriptions
         return [{"name": name, "description": info["description"], "pattern": info["pattern"]} 
                 for name, info in self.functions.items()]
-
-    def load_cache(self):
-        try:
-            logger.info(f"Loading cache from {self.cache_file}")
-            with open(self.cache_file, 'r') as f:
-                data = json.load(f)
-                self.cache = data.get("cache", {})
-                for function in data.get("functions", []):
-                    self.register(function["name"], function["description"], function.get("pattern", ""))
-        except FileNotFoundError:
-            self.cache = {}
 
     def save_cache(self):
         # Save both functions and cache to the cache_file
@@ -67,6 +60,11 @@ class HybridFunctionCaller:
         self.registry = registry
 
     def rule_based_call(self, prompt: str) -> str:
+        # Check cache first
+        if prompt in self.registry.cache:
+            logger.info(f"RETURNING FROM CACHE {prompt}")
+            return self.registry.cache[prompt] 
+        
         for name, pattern in self.registry.patterns.items():
             if pattern.search(prompt):
                 return name 
@@ -75,13 +73,9 @@ class HybridFunctionCaller:
         if prompt in self.registry.cache:
             return self.registry.cache[prompt]  # Return cached result
 
-        return "None"
+        return "Pass to the LLM"
 
     def llm_based_call(self, prompt: str) -> str:
-        # Check cache first
-        if prompt in self.registry.cache:
-            logger.info(f"RETURNING FROM CACHE {prompt}")
-            return self.registry.cache[prompt] 
 
         # System message guiding the LLM
         sys_msg = (
@@ -118,19 +112,21 @@ class HybridFunctionCaller:
             return selected_action
         except ValueError as ve:
             print(ve)
+            logger.error(f"Error: {ve}")
             return "None"
 
     def call(self, prompt: str) -> str:
         try:            
             rule_based_result = self.rule_based_call(prompt)
+            logger.info(f"Rule-based result: {rule_based_result}")
             
-            if rule_based_result != "None":
-                logger.info(f"Rule-based result: {rule_based_result}")
+            if rule_based_result != "Pass to the LLM":
                 return rule_based_result
             
             llm_result = self.llm_based_call(prompt)
             logger.info(f"LLM-based result: {llm_result}")
             return llm_result
+        
         except Exception as e:
             print(e)
             logger.error(f"Error: {e}")

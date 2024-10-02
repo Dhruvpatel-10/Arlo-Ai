@@ -1,16 +1,14 @@
 # engine.py
 import os
-import uuid
 import subprocess
 from playsound import playsound
 from src.common.logger import logger as logging
 from src.common.config import AUDIO_DIR
-import time
+import time ,random
 
 def generate_audio(text: str, voice: str = "en-US-AvaNeural", max_retries: int = 3, backoff_factor: float = 0.7) -> str:
 
     # Clean and format text
-    limited_hash = uuid.uuid4().hex[:5]
     text_cleaned = os.linesep.join([s.strip().replace("*", "") for s in text.splitlines() if s.strip()])
 
     # Create directory for audio files
@@ -18,9 +16,9 @@ def generate_audio(text: str, voice: str = "en-US-AvaNeural", max_retries: int =
     os.makedirs(dir_path, exist_ok=True)
 
     # Define paths for unique temporary files
-    timestamp = int(time.time())
-    temp_f = os.path.join(dir_path, f'temp_text_{timestamp}_{limited_hash}.txt')
-    mp3_file = os.path.join(dir_path, f"genAudio_{timestamp}_{limited_hash}.mp3")
+    unique_id = int(time.time()) + random.getrandbits(32)
+    temp_f = os.path.join(dir_path, f'temp_text_{unique_id}.txt')
+    mp3_file = os.path.join(dir_path, f"genAudio_{unique_id}.mp3")
 
     attempt = 0
     while attempt < max_retries:
@@ -109,11 +107,14 @@ def play_audio(mp3_file: str) -> None:
 
     if os.path.exists(mp3_file):
         try:
-            logging.info(f"Playing audio file: {mp3_file}")
             playsound(mp3_file)
             os.remove(mp3_file)
-            logging.info(f"Deleted temporary audio file: {mp3_file}")
         except Exception as e:
             logging.error(f"Failed to play the audio '{mp3_file}': {e}")
     else:
         logging.error(f"Audio file not found: {mp3_file}")
+
+if __name__ == '__main__':
+    text = "Hello, World!"
+    mp3_file = generate_audio(text)
+    play_audio(mp3_file)

@@ -1,0 +1,107 @@
+INFO main.py main Initializing Assistant...
+INFO logger.py delete_af Cleaning up generated audio files...
+INFO function_registry.py load_data Loading data from D:\project\Lexi-Ai\data\cache\function_cache.json
+INFO url_parser.py _load_json Loading D:\project\Lexi-Ai\data\cache\queries.json
+INFO url_parser.py _load_json Loading D:\project\Lexi-Ai\data\cache\urls.json
+INFO audio.py start_audio_threads Starting 2 audio generator threads.
+INFO audio.py start_audio_threads Started thread: AudioGenerator-1
+INFO audio.py start_audio_threads Started thread: AudioGenerator-2
+INFO audio.py start_audio_threads Started thread: AudioPlayer
+INFO function_registry.py call Rule-based result: Pass to the LLM
+INFO function_registry.py save_cache Saving cache to D:\project\Lexi-Ai\data\cache\function_cache.json
+INFO function_registry.py call LLM-based result: None
+INFO main.py main Response too long. Splitting and enqueuing response.
+INFO main.py main Waiting for all tasks in text_queue to be processed.
+INFO main.py main All tasks in text_queue have been processed.
+INFO main.py main Waiting for all tasks in audio_queue to be processed.
+INFO main.py main All tasks in audio_queue have been processed.
+INFO main.py main Sending sentinel to audio threads.
+INFO main.py main Waiting for audio threads to finish.
+INFO audio.py audio_generator_worker Audio Generator received sentinel. Exiting.
+INFO audio.py audio_generator_worker Audio Generator received sentinel. Exiting.
+INFO audio.py audio_player_worker Audio Player received sentinel. Exiting.
+INFO main.py main Joined thread: AudioGenerator-1
+INFO main.py main Joined thread: AudioGenerator-2
+INFO main.py main Joined thread: AudioPlayer
+INFO main.py main All audio threads have finished. Terminating assistant.
+INFO main.py main Assistant terminated. Goodbye!
+INFO main.py main Initializing Assistant...
+INFO logger.py delete_af Cleaning up generated audio files...
+INFO function_registry.py load_data Loading data from D:\project\Lexi-Ai\data\cache\function_cache.json
+INFO url_parser.py _load_json Loading D:\project\Lexi-Ai\data\cache\queries.json
+INFO url_parser.py _load_json Loading D:\project\Lexi-Ai\data\cache\urls.json
+INFO audio.py start_audio_threads Starting 2 audio generator threads.
+INFO audio.py start_audio_threads Started thread: AudioGenerator-1
+INFO audio.py start_audio_threads Started thread: AudioGenerator-2
+INFO audio.py start_audio_threads Started thread: AudioPlayer
+INFO main.py main Exit command received. Shutting down.
+INFO main.py main Waiting for all tasks in text_queue to be processed.
+INFO main.py main All tasks in text_queue have been processed.
+INFO main.py main Waiting for all tasks in audio_queue to be processed.
+INFO main.py main All tasks in audio_queue have been processed.
+INFO main.py main Sending sentinel to audio threads.
+INFO main.py main Waiting for audio threads to finish.
+INFO audio.py audio_generator_worker Audio Generator received sentinel. Exiting.
+INFO audio.py audio_generator_worker Audio Generator received sentinel. Exiting.
+INFO audio.py audio_player_worker Audio Player received sentinel. Exiting.
+INFO main.py main Joined thread: AudioGenerator-1
+INFO main.py main Joined thread: AudioGenerator-2
+INFO main.py main Joined thread: AudioPlayer
+INFO main.py main All audio threads have finished. Terminating assistant.
+INFO main.py main Assistant terminated. Goodbye!
+INFO main.py main Initializing Assistant...
+INFO logger.py delete_af Cleaning up generated audio files...
+INFO function_registry.py load_data Loading data from D:\project\Lexi-Ai\data\cache\function_cache.json
+INFO url_parser.py _load_json Loading D:\project\Lexi-Ai\data\cache\queries.json
+INFO url_parser.py _load_json Loading D:\project\Lexi-Ai\data\cache\urls.json
+INFO audio.py start_audio_threads Starting 2 audio generator threads.
+INFO audio.py start_audio_threads Started thread: AudioGenerator-1
+INFO audio.py start_audio_threads Started thread: AudioGenerator-2
+INFO audio.py start_audio_threads Started thread: AudioPlayer
+INFO function_registry.py rule_based_call RETURNING FROM CACHE How's you doing buddy
+INFO function_registry.py call Rule-based result: None
+INFO main.py main Less than 20 words. Enqueuing response.
+INFO engine.py generate_audio Executing command: edge-tts --voice en-US-AvaNeural --file D:\project\Lexi-Ai\data\audio\temp_text_1931928763.txt --write-media D:\project\Lexi-Ai\data\audio\genAudio_1931928763.mp3
+INFO engine.py generate_audio Successfully generated audio for text chunk: 'I'm doing great, thanks for as...'
+INFO engine.py generate_audio Deleted temporary text file: D:\project\Lexi-Ai\data\audio\temp_text_1931928763.txt
+INFO audio.py audio_generator_worker Audio generated: D:\project\Lexi-Ai\data\audio\genAudio_1931928763.mp3
+INFO function_registry.py call Rule-based result: Pass to the LLM
+INFO function_registry.py save_cache Saving cache to D:\project\Lexi-Ai\data\cache\function_cache.json
+INFO function_registry.py call LLM-based result: None
+INFO main.py main Less than 20 words. Enqueuing response.
+INFO engine.py generate_audio Executing command: edge-tts --voice en-US-AvaNeural --file D:\project\Lexi-Ai\data\audio\temp_text_5503683379.txt --write-media D:\project\Lexi-Ai\data\audio\genAudio_5503683379.mp3
+INFO engine.py generate_audio Successfully generated audio for text chunk: 'What's on your mind today...'
+INFO engine.py generate_audio Deleted temporary text file: D:\project\Lexi-Ai\data\audio\temp_text_5503683379.txt
+INFO audio.py audio_generator_worker Audio generated: D:\project\Lexi-Ai\data\audio\genAudio_5503683379.mp3
+INFO function_registry.py call Rule-based result: none
+INFO main.py main Response too long. Splitting and enqueuing response.
+SUCCESS utils.py split_and_enqueue_response Enqueuing response: Since I don't have any context about what's going on or what you need help with, I'll give you a simple suggestion.
+SUCCESS utils.py split_and_enqueue_response Enqueuing response: Take a deep breath, grab a cup of your favorite drink, and think about what makes you happy.
+SUCCESS utils.py split_and_enqueue_response Enqueuing response: Do something that puts a smile on your face.
+INFO engine.py generate_audio Executing command: edge-tts --voice en-US-AvaNeural --file D:\project\Lexi-Ai\data\audio\temp_text_2009397067.txt --write-media D:\project\Lexi-Ai\data\audio\genAudio_2009397067.mp3
+INFO engine.py generate_audio Executing command: edge-tts --voice en-US-AvaNeural --file D:\project\Lexi-Ai\data\audio\temp_text_4235040769.txt --write-media D:\project\Lexi-Ai\data\audio\genAudio_4235040769.mp3
+INFO engine.py generate_audio Successfully generated audio for text chunk: 'Take a deep breath, grab a cup...'
+INFO engine.py generate_audio Deleted temporary text file: D:\project\Lexi-Ai\data\audio\temp_text_2009397067.txt
+INFO audio.py audio_generator_worker Audio generated: D:\project\Lexi-Ai\data\audio\genAudio_2009397067.mp3
+INFO engine.py generate_audio Executing command: edge-tts --voice en-US-AvaNeural --file D:\project\Lexi-Ai\data\audio\temp_text_2787134600.txt --write-media D:\project\Lexi-Ai\data\audio\genAudio_2787134600.mp3
+INFO engine.py generate_audio Successfully generated audio for text chunk: 'Since I don't have any context...'
+INFO engine.py generate_audio Deleted temporary text file: D:\project\Lexi-Ai\data\audio\temp_text_4235040769.txt
+INFO audio.py audio_generator_worker Audio generated: D:\project\Lexi-Ai\data\audio\genAudio_4235040769.mp3
+INFO engine.py generate_audio Successfully generated audio for text chunk: 'Do something that puts a smile...'
+INFO engine.py generate_audio Deleted temporary text file: D:\project\Lexi-Ai\data\audio\temp_text_2787134600.txt
+INFO audio.py audio_generator_worker Audio generated: D:\project\Lexi-Ai\data\audio\genAudio_2787134600.mp3
+INFO main.py main Exit command received. Shutting down.
+INFO main.py main Waiting for all tasks in text_queue to be processed.
+INFO main.py main All tasks in text_queue have been processed.
+INFO main.py main Waiting for all tasks in audio_queue to be processed.
+INFO main.py main All tasks in audio_queue have been processed.
+INFO main.py main Sending sentinel to audio threads.
+INFO main.py main Waiting for audio threads to finish.
+INFO audio.py audio_generator_worker Audio Generator received sentinel. Exiting.
+INFO audio.py audio_generator_worker Audio Generator received sentinel. Exiting.
+INFO audio.py audio_player_worker Audio Player received sentinel. Exiting.
+INFO main.py main Joined thread: AudioGenerator-1
+INFO main.py main Joined thread: AudioGenerator-2
+INFO main.py main Joined thread: AudioPlayer
+INFO main.py main All audio threads have finished. Terminating assistant.
+INFO main.py main Assistant terminated. Goodbye!

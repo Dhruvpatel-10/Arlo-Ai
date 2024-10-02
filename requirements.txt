@@ -8,3 +8,4 @@ nltk
 edge-tts
 playsound==1.2.2
 loguru
+spacy

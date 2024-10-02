@@ -141,7 +141,7 @@ Output:
             return f"{base_url}{search_path}{encoded_query}"
 
         elif base_url and not search_path and not query:
-            logger.info(f"Constructed URL with just base URL: {base_url}")
+            logger.success(f"Constructed URL with just base URL: {base_url}")
             return base_url
 
         elif search_path is None:  
@@ -149,9 +149,10 @@ Output:
             google_base_url = google_url_info["base_url"]
             google_search_path = google_url_info["search_path"]
             encoded_query = urllib.parse.quote(f"{platform} {query or ''}")
-            logger.info(f"Google fallback URL: {google_base_url}{google_search_path}{encoded_query}")
-            logger.info(f"Constructed URL with google search: {encoded_query}")
+            logger.success(f"Google fallback URL: {google_base_url}{google_search_path}{encoded_query}")
+            logger.success(f"Constructed URL with google search: {encoded_query}")
             return f"{google_base_url}{google_search_path}{encoded_query}"
 
         else:
+            logger.error(f"Failed to construct URL: {platform} {query or ''}")
             return None

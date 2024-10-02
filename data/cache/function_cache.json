@@ -34,6 +34,11 @@
             "name": "open_browser",
             "description": "Open the default browser",
             "pattern": "\b(?:open|start|launch|go(?: to)?)\b.*\b(?:browser|google|website|chrome|internet)\b|\b(?:search|find|look(?: up)?)\b.*\b(?:youtube|google)\b.*(?:for)?\b.*(?:video|song|info|query)?\b"
+        },
+        {
+            "name": "none",
+            "description": "Handle queries that typically result in None responses",
+            "pattern": "\\b(hey|hello|hi|what's up|what do you think|what's your opinion|tell me about|what is the meaning of|suggest|recommend|should i|what should|explain me)\\b|\\b(who|what|when|where|why|how)\\b.*\\b(is|are|was|were|will|do|does|did)\\b|\\b(can you|could you)\\b.*\\b(tell|explain|describe)\\b|^[a-zA-Z0-9]{1,2}$"
         }
     ],
     "cache": {
@@ -102,6 +107,19 @@
         "You suggest me something": "None",
         "what the max size of your response. I mean give me a number so it can help me to write a function": "The maximum size of my response is 1 word.",
         "i": "None",
-        "open github": "open_browser"
+        "open github": "open_browser",
+        "Which is the fastest animal": "None",
+        "What is the future of space colonization": "None",
+        "Why it feels good": "None",
+        "You are good I know that": "None",
+        "Can we chat": "None",
+        "I still optimizing you": "None",
+        "Explain in detail about dark matter and energy": "None",
+        "It's awesome is there something else this intersting?": "None",
+        "Explain me about ancient India": "None",
+        "Who has the most intersting tech in the world": "None",
+        "Some intersting facts in detail": "None",
+        "How's you doing buddy": "None",
+        "As usaul ": "None"
     }
 }

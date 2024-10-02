@@ -15,12 +15,11 @@ def audio_generator_worker(text_queue: Queue, audio_queue: Queue):
             text_queue.task_done()
             break
         try:
-            logging.info(f"Generating audio for chunk: '{text_chunk[:30]}...'")
             mp3_file = generate_audio(text=text_chunk)
             logging.info(f"Audio generated: {mp3_file}")
             audio_queue.put(mp3_file)  
         except Exception as e:
-            logging.error(f"Error generating audio for '{text_chunk}': {e}")
+            logging.error(f"generating audio for '{text_chunk}': {e}")
         finally:
             text_queue.task_done()
 
@@ -32,9 +31,7 @@ def audio_player_worker(audio_queue: Queue):
             audio_queue.task_done()
             break
         try:
-            logging.info(f"Playing audio: {mp3_file}")
             play_audio(mp3_file)
-            logging.info(f"Finished playing: {mp3_file}")
         except Exception as e:
             logging.error(f"Error playing audio '{mp3_file}': {e}")
         finally:

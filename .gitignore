@@ -5,6 +5,6 @@ test.py
 screenshot.jpg
 webcam.jpg
 import_test.py
-data/audio/*.mp3
+data/audio/*
 data/cache/*.log
 data/cache/history.json
