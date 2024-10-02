@@ -7,5 +7,5 @@ webcam.jpg
 import_test.py
 data/audio/*
 data/images/*
-# data/cache/json/*.json
-# data/cache/logs/*.log
+data/cache/json/*.json
+data/cache/logs/*.log
