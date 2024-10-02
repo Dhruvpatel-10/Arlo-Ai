@@ -1,3 +1,7 @@
+!data/audio
+!data/cache/json
+!data/cache/logs
+!data/images
 data/cache/json/*.json
 data/cache/logs/*.log
 .venv
@@ -9,4 +13,3 @@ webcam.jpg
 import_test.py
 data/audio/*
 data/images/*
-!data/
