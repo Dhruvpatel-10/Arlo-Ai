@@ -45,10 +45,6 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-## Run this in terminal
-```bash
-python -m spacy download en_core_web_sm
-```
 
 ## Environment Variables
 
