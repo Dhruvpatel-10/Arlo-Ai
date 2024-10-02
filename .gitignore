@@ -9,3 +9,4 @@ webcam.jpg
 import_test.py
 data/audio/*
 data/images/*
+!data/
