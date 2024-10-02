@@ -3,7 +3,6 @@ import re
 import os
 import json
 import aiofiles
-import asyncio
 from typing import Dict, Any, List, Tuple
 from common.config import JSON_DIR
 from common.logger import logger

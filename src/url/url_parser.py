@@ -10,6 +10,7 @@ from common.config import JSON_DIR
 from src.common.logger import logger
 
 # Define cache directories
+os.makedirs(JSON_DIR, exist_ok=True)
 U_DIR = os.path.join(JSON_DIR, 'urls.json')
 Q_DIR = os.path.join(JSON_DIR, 'queries.json')
 GROQ_API = os.getenv("GROQ_URL")

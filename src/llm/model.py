@@ -23,7 +23,7 @@ sys_msg = (
     Conversational Interactions: max_tokens = 120
     Detailed Explanations: max_tokens = 250 '''
     )
-
+os.makedirs(JSON_DIR, exist_ok=True)
 history_file = os.path.join(JSON_DIR, 'history.json')
 
 def load_history():
