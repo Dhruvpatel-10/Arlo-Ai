@@ -87,17 +87,6 @@ async def main():
             await text_queue.put((None, None))  # Send sentinel to audio generators
             await audio_queue.put((None,None))
         logger.info("Waiting for audio workers to finish.")
-        await asyncio.gather(*workers, return_exceptions=True)  # Wait for all workers to finish
-        logger.info("Waiting for all tasks in text_queue to be processed.")
-        await text_queue.join()
-        logger.info("All tasks in text_queue have been processed.")
-        logger.info("Waiting for all tasks in audio_queue to be processed.")
-        await audio_queue.join()
-        logger.info("All tasks in audio_queue have been processed.")
-
-        # Send sentinel to audio workers
-
-        # Wait for audio workers to finish
-        
+        await asyncio.gather(*workers, return_exceptions=True)  # Wait for all workers to finish        
         logger.info("All audio workers have finished. Terminating assistant.")
         logger.info("Assistant terminated. Goodbye!")

@@ -99,6 +99,7 @@ class FunctionRegistryAndCaller:
                 model="llama-3.1-70b-versatile",
                 messages=function_convo,
                 temperature=0.1,
+                top_p=0.1,
                 max_tokens=50
             )
 
