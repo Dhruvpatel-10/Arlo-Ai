@@ -6,17 +6,14 @@ from typing import Dict, Any, Tuple, Optional
 from functools import lru_cache
 from dotenv import load_dotenv;load_dotenv()
 import groq
-from common.config import JSON_DIR
+from common.config import URL_DIR, QUERY_DIR
 from src.common.logger import logger
 
-# Define cache directories
-os.makedirs(JSON_DIR, exist_ok=True)
-U_DIR = os.path.join(JSON_DIR, 'urls.json')
-Q_DIR = os.path.join(JSON_DIR, 'queries.json')
+
 GROQ_API = os.getenv("GROQ_URL")
 
 class SearchQueryFinder:
-    def __init__(self, queries_file: str = Q_DIR, urls_file: str = U_DIR, groq_api_key: str = GROQ_API):
+    def __init__(self, queries_file: str = QUERY_DIR, urls_file: str = URL_DIR, groq_api_key: str = GROQ_API):
         self.queries = self._load_json(queries_file)
         self.urls = self._load_json(urls_file)
         self.groq_client = groq.Client(api_key=groq_api_key)
@@ -26,8 +23,6 @@ class SearchQueryFinder:
     @staticmethod
     @lru_cache(maxsize=32)
     def _load_json(filepath: str) -> Dict:
-        """ Efficient JSON loader with caching """
-        logger.info(f"Loading {filepath}")
         with open(filepath, 'r') as f:
             return json.load(f)
 
@@ -55,7 +50,7 @@ class SearchQueryFinder:
         if platform:
             new_query = {"prompt": prompt, "action": {"platform": platform, "query": query}}
             self.queries.append(new_query)
-            self._save_json(Q_DIR, self.queries)
+            self._save_json(QUERY_DIR, self.queries)
             logger.info(f"Cached new query: {new_query}")
             return self._construct_url(platform, query)
 
@@ -125,7 +120,6 @@ Output:
             return None, None
 
     def _construct_url(self, platform: str, query: str, default_search_engine="google") -> str:
-
         platform = platform.lower()
         logger.info(f"Platform: {platform} | Query: {query}")
         try:
@@ -141,17 +135,21 @@ Output:
             logger.info(f"Constructed URL with search query: {base_url}{search_path}{encoded_query}")
             return f"{base_url}{search_path}{encoded_query}"
 
-        elif base_url and not search_path and not query:
+        elif base_url and (not search_path or not query):
+            # If query is None or search_path is empty, return base_url
             logger.success(f"Constructed URL with just base URL: {base_url}")
             return base_url
 
-        elif search_path is None:  
-            google_url_info = self.urls[default_search_engine]
+        elif search_path is None:
+            # Fallback to Google search
+            google_url_info = self.urls.get(default_search_engine)
+            if not google_url_info:
+                logger.error(f"Default search engine '{default_search_engine}' not configured.")
+                return None
             google_base_url = google_url_info["base_url"]
             google_search_path = google_url_info["search_path"]
             encoded_query = urllib.parse.quote(f"{platform} {query or ''}")
             logger.success(f"Google fallback URL: {google_base_url}{google_search_path}{encoded_query}")
-            logger.success(f"Constructed URL with google search: {encoded_query}")
             return f"{google_base_url}{google_search_path}{encoded_query}"
 
         else:

@@ -8,6 +8,7 @@ data/cache/logs/*.log
 .env
 __pycache__
 test.py
+test2.py
 screenshot.jpg
 webcam.jpg
 import_test.py

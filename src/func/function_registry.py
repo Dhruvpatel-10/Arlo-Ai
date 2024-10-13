@@ -4,36 +4,29 @@ import os
 import json
 import aiofiles
 from typing import Dict, Any, List, Tuple
-from common.config import JSON_DIR
+from common.config import FUNC_CACHE_DIR
 from common.logger import logger
 from groq import AsyncGroq
 from dotenv import load_dotenv
 
 load_dotenv()
-
 groq_api = os.getenv("GROQ_API_FUNC")
-os.makedirs(JSON_DIR, exist_ok=True)
-c_dir = os.path.join(JSON_DIR, 'function_cache.json')
 
 class FunctionRegistryAndCaller:
-    def __init__(self, cache_file=c_dir):
+    def __init__(self, cache_file=FUNC_CACHE_DIR):
         self.functions: Dict[str, Dict[str, Any]] = {}
         self.patterns: Dict[str, re.Pattern] = {}
         self.cache: Dict[str, Tuple[str, float]] = {}
         self.cache_file = cache_file
 
     @classmethod
-    async def create(cls, cache_file=c_dir):
-        """
-        Asynchronous initializer for the class.
-        """
+    async def create(cls, cache_file=FUNC_CACHE_DIR):
         self = cls(cache_file)
         await self.load_data()
         return self
 
     async def load_data(self):
         try:
-            logger.info(f"Loading data from {self.cache_file}")
             async with aiofiles.open(self.cache_file, 'r') as f:
                 content = await f.read()
                 if content.strip():  # Ensure the file isn't empty

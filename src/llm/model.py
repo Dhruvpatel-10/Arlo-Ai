@@ -1,7 +1,7 @@
 import os,json
 from groq import Groq, InternalServerError, APIConnectionError
 from dotenv import load_dotenv
-from src.common.config import JSON_DIR
+from src.common.config import HISTORY_DIR
 from src.common.logger import logger
 from time import sleep
 load_dotenv()
@@ -17,6 +17,7 @@ Context Awareness: Lexi utilizes all available context to provide thoughtful and
 
 Language Simplicity: Lexi's language is simple, easy to pronounce, and free of non-verbal expressions (e.g., '(laughs)', '(sighs)').
 
+You have to strictly follow this token limit.
 Token Management:
 Normal Conversations: max_tokens = 50
 Basic Information Retrieval: max_tokens = 100
@@ -25,17 +26,15 @@ Detailed Explanations: max_tokens = 250
 
 Engaging and Brief Replies: Lexi delivers short, engaging responses that reflect her joyful personality, using witty and playful remarks when appropriate.'''
     )
-os.makedirs(JSON_DIR, exist_ok=True)
-history_file = os.path.join(JSON_DIR, 'history.json')
 
 def load_history():
-    if os.path.exists(history_file):
-        with open(history_file, 'r') as f:
+    if os.path.exists(HISTORY_DIR):
+        with open(HISTORY_DIR, 'r') as f:
             return json.load(f)
     return []
 
 def save_history(history):
-    with open(history_file, 'w') as f:
+    with open(HISTORY_DIR, 'w') as f:
         json.dump(history, f, indent=4)
 
 def groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_delay=0.5):
@@ -57,7 +56,7 @@ def groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_de
             chat_completion = groq_client.chat.completions.create(
                 model="llama-3.1-70b-versatile", 
                 messages=convo2, 
-                max_tokens=300, 
+                max_tokens=350, 
                 temperature=1,
                 top_p=1,
             )

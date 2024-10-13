@@ -1,1 +1,1 @@
-from src.common.config import DATA_DIR, AUDIO_DIR, IMAGES_DIR, CACHE_DIR, global_index_counter
+from src.common.config import DATA_DIR, AUDIO_DIR, IMAGES_DIR, CACHE_DIR
