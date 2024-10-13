@@ -1,9 +1,8 @@
 !data/audio
-!data/cache/json
 !data/cache/logs
 !data/images
-data/cache/json/*.json
 data/cache/logs/*.log
+data/cache/json/history.json
 .venv
 .env
 __pycache__

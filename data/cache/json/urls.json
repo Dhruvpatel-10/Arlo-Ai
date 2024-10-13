@@ -1,0 +1,30 @@
+{
+    "youtube": {
+      "base_url": "https://www.youtube.com",
+      "search_path": "/results?search_query="
+    },
+    "google": {
+      "base_url": "https://www.google.com",
+      "search_path": "/search?q="
+    },
+    "twitter": {
+      "base_url": "https://x.com",
+      "search_path": "/search?q="
+    },
+    "linkedin": {
+      "base_url": "https://www.linkedin.com",
+      "search_path": "/search/results/all/?keywords="
+    },
+    "facebook": {
+      "base_url": "https://www.facebook.com",
+      "search_path": ""
+    },
+    "github": {
+      "base_url": "https://github.com",
+      "search_path": ""
+    },
+    "spotify": {
+      "base_url": "https://open.spotify.com/",
+      "search_path": "/search/"
+    }
+  }

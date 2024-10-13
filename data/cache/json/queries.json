@@ -1,0 +1,240 @@
+[
+  {
+    "prompt": "Open YouTube",
+    "action": {
+      "platform": "youtube",
+      "query": null
+    }
+  },
+  {
+    "prompt": "Go to Google",
+    "action": {
+      "platform": "google",
+      "query": null
+    }
+  },
+  {
+    "prompt": "Search for cats on YouTube",
+    "action": {
+      "platform": "youtube",
+      "query": "cats"
+    }
+  },
+  {
+    "prompt": "Look up recipe for chocolate cake on Google",
+    "action": {
+      "platform": "google",
+      "query": "recipe for chocolate cake"
+    }
+  },
+  {
+    "prompt": "Show me videos about ancient Egypt on YouTube",
+    "action": {
+      "platform": "youtube",
+      "query": "ancient Egypt"
+    }
+  },
+  {
+    "prompt": "Find information about the solar system using Google",
+    "action": {
+      "platform": "google",
+      "query": "the solar system"
+    }
+  },
+  {
+    "prompt": "On YouTube, search for new music releases",
+    "action": {
+      "platform": "youtube",
+      "query": "new music releases"
+    }
+  },
+  {
+    "prompt": "Using Google, find the best restaurants nearby",
+    "action": {
+      "platform": "google",
+      "query": "the best restaurants nearby"
+    }
+  },
+  {
+    "prompt": "Play YouTube videos related to machine learning tutorials for beginners",
+    "action": {
+      "platform": "youtube",
+      "query": "machine learning tutorials for beginners"
+    }
+  },
+  {
+    "prompt": "Search Google for the impact of artificial intelligence on job markets in the next decade",
+    "action": {
+      "platform": "google",
+      "query": "the impact of artificial intelligence on job markets in the next decade"
+    }
+  },
+  {
+    "prompt": "Search for dance moves on google",
+    "action": {
+      "platform": "google",
+      "query": "dance moves"
+    }
+  },
+  {
+    "prompt": "Play some music on Spotify",
+    "action": {
+      "platform": "spotify",
+      "query": "some music"
+    }
+  },
+  {
+    "prompt": "What's apple search on youtube",
+    "action": {
+      "platform": "youtube",
+      "query": "what's apple search"
+    }
+  },
+  {
+    "prompt": "open word",
+    "action": {
+      "platform": "None",
+      "query": "open word"
+    }
+  },
+  {
+    "prompt": "open youtube and search for cakes",
+    "action": {
+      "platform": "YouTube",
+      "query": "cakes"
+    }
+  },
+  {
+    "prompt": "open youtube and search for cake",
+    "action": {
+      "platform": "youtube",
+      "query": "cake"
+    }
+  },
+  {
+    "prompt": "search for Happy birthday songs on youtube",
+    "action": {
+      "platform": "youtube",
+      "query": "Happy birthday songs"
+    }
+  },
+  {
+    "prompt": "what is Python programming search on google",
+    "action": {
+      "platform": "google",
+      "query": "Python programming search"
+    }
+  },
+  {
+    "prompt": "open youtube and search for blinding lights",
+    "action": {
+      "platform": "youtube",
+      "query": "blinding lights"
+    }
+  },
+  {
+    "prompt": "how am I looking?",
+    "action": {
+      "platform": "google",
+      "query": null
+    }
+  },
+  {
+    "prompt": "What's on the screen?",
+    "action": {
+      "platform": "google",
+      "query": null
+    }
+  },
+  {
+    "prompt": "Yes can you tell me about bugatti more",
+    "action": {
+      "platform": "google",
+      "query": "Bugatti"
+    }
+  },
+  {
+    "prompt": "Can you open youtube",
+    "action": {
+      "platform": "youtube",
+      "query": null
+    }
+  },
+  {
+    "prompt": "Search on youtube mere nishan",
+    "action": {
+      "platform": "youtube",
+      "query": "mere nishan"
+    }
+  },
+  {
+    "prompt": "open twitter and search elon mush",
+    "action": {
+      "platform": "twitter",
+      "query": "Elon Musk"
+    }
+  },
+  {
+    "prompt": "Search on twitter about openai",
+    "action": {
+      "platform": "twitter",
+      "query": "openai"
+    }
+  },
+  {
+    "prompt": "open stackover flow and search for python problems",
+    "action": {
+      "platform": "stackoverflow",
+      "query": "python problems"
+    }
+  },
+  {
+    "prompt": "open youtube and search for search by nf",
+    "action": {
+      "platform": "youtube",
+      "query": "search by nf"
+    }
+  },
+  {
+    "prompt": "open github",
+    "action": {
+      "platform": "github",
+      "query": null
+    }
+  },
+  {
+    "prompt": "Search for News on google",
+    "action": {
+      "platform": "google",
+      "query": "News"
+    }
+  },
+  {
+    "prompt": "google",
+    "action": {
+      "platform": "google",
+      "query": null
+    }
+  },
+  {
+    "prompt": "open youtube and search Zanzibar",
+    "action": {
+      "platform": "youtube",
+      "query": "Zanzibar"
+    }
+  },
+  {
+    "prompt": "Search Bora Bora on google",
+    "action": {
+      "platform": "google",
+      "query": "Bora Bora"
+    }
+  },
+  {
+    "prompt": "search web3 on twitter",
+    "action": {
+      "platform": "twitter",
+      "query": "web3"
+    }
+  }
+]

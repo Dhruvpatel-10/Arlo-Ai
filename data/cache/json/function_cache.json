@@ -1,0 +1,58 @@
+{
+    "functions": [
+        {
+            "name": "extract_clipboard",
+            "description": "Extract text from clipboard",
+            "pattern": "\\b(clipboard|copied|paste)\\b"
+        },
+        {
+            "name": "take_screenshot",
+            "description": "Capture screen content",
+            "pattern": "\\b(screen|screenshot|capture)\\b"
+        },
+        {
+            "name": "capture_webcam",
+            "description": "Capture image from webcam",
+            "pattern": "\\b(camera|webcam|visual input)\\b"
+        },
+        {
+            "name": "open_word",
+            "description": "Open Microsoft Word",
+            "pattern": "\\b(open|start)\\b.*\\b(word)\\b"
+        },
+        {
+            "name": "open_excel",
+            "description": "Open Microsoft Excel",
+            "pattern": "\\b(open|start)\\b.*\\b(excel)\\b"
+        },
+        {
+            "name": "open_powerpoint",
+            "description": "Open Microsoft PowerPoint",
+            "pattern": "\\b(open|start)\\b.*\\b(powerpoint|power point)\\b"
+        },
+        {
+            "name": "open_browser",
+            "description": "Open the default browser",
+            "pattern": "\b(?:open|start|launch|go(?: to)?)\b.*\b(?:browser|google|website|chrome|internet)\b|\b(?:search|find|look(?: up)?)\b.*\b(?:youtube|google)\b.*(?:for)?\b.*(?:video|song|info|query)?\b"
+        }
+    ],
+    "cache": {
+        "Who was Maharana Pratap": "None",
+        "Who was Shivji Maharaja": "None",
+        "History of Russia": "None",
+        "I want to search on youtube about superman": "open_browser",
+        "what's apple is": "None",
+        "search for Happy birthday songs on youtube": "open_browser",
+        "what is Python programming search on google": "open_browser",
+        "open youtube and search for blinding lights": "open_browser",
+        "how am I looking?": "capture_webcam",
+        "Yes can you tell me about bugatti more": "None",
+        "what do you think of buggati": "None",
+        "History of russia": "None",
+        "Histroy of India": "None",
+        "What is the meaning of life": "None",
+        "Can you open youtube": "open_browser",
+        "Search on youtube mere nishan": "open_browser",
+        "open twitter and search elon mush": "open_browser"
+    }
+}
