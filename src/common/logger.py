@@ -1,8 +1,7 @@
 from loguru import logger
-import os
-from .config import  AUDIO_DIR, LOG_FILE, ERROR_LOG_FILE, SUCCESS_LOG_FILE, DEBUG_LOG_FILE
+from common.config import  AUDIO_DIR, LOG_FILE, ERROR_LOG_FILE, SUCCESS_LOG_FILE, DEBUG_LOG_FILE
 from pathlib import Path
-
+import concurrent.futures
 
 logger.add(LOG_FILE,
     rotation="2 MB",         # Rotate after the log file reaches 2 MB
@@ -38,14 +37,18 @@ logger.add(DEBUG_LOG_FILE,
     filter=lambda record: record["level"].name == "DEBUG" 
 )
 
-def delete_af():
-    logger.info("Cleaning up generated audio files...")
-    for audio_file in Path(AUDIO_DIR).glob('*.mp3'):
-        try:
-            os.remove(audio_file)
-            logger.info(f"Deleted temporary audio file: {audio_file}")
-        except OSError as e:
-            logger.error(f"Error deleting file {audio_file}: {e}")
+def delete_file(file):
+    try:
+        file.unlink()
+        logger.success(f"Deleted temporary file: {file}")
+    except OSError as e:
+        logger.error(f"Error deleting file {file}: {e}")
 
+def delete_af():
+    logger.info("Cleaning up generated audio and text files...")
+    files_to_delete = list(Path(AUDIO_DIR).glob('*.mp3')) + list(Path(AUDIO_DIR).glob('*.txt'))
+    
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(delete_file, files_to_delete)
 
     

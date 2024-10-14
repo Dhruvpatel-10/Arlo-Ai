@@ -53,6 +53,13 @@
         "What is the meaning of life": "None",
         "Can you open youtube": "open_browser",
         "Search on youtube mere nishan": "open_browser",
-        "open twitter and search elon mush": "open_browser"
+        "open twitter and search elon mush": "open_browser",
+        "hola amigo": "None",
+        "Who is your fav person me or robert downey jr.?": "None",
+        "Write something in 10 lines": "None",
+        "it's cute now tell me 10 facts about US military": "None",
+        "cls": "None",
+        "Yah": "None",
+        "Good to see ya": "None"
     }
 }

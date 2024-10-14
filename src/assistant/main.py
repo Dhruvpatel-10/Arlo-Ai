@@ -4,13 +4,12 @@ from src.llm.model import groq_prompt
 from func.cmdpharser import process_command
 from func.function_registry import FunctionRegistryAndCaller
 from src.url.url_parser import SearchQueryFinder
-from src.common.logger import logger, delete_af
 from src.tts.tts_manager import TTSManager
+from src.common.logger import logger
 
 async def main():
     print("\n[INFO] Initializing Assistant...")
     logger.info("Initializing Assistant...")
-    delete_af()
     function_caller = await FunctionRegistryAndCaller.create()
     search_query = SearchQueryFinder()
     tts_manager = TTSManager()
@@ -56,6 +55,7 @@ async def main():
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
     finally:
+        await tts_manager.close_all_engines()
         # Initiate shutdown
         logger.info("Initiating shutdown sequence.")
         logger.info("Assistant terminated. Goodbye!")

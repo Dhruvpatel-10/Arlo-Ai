@@ -1,19 +1,34 @@
-import os
 import aiohttp
 import asyncio
 import base64
 from typing import Optional
 from tts.engines.base_tts import TTSEngine
 from src.common.logger import logger
-from src.common.config import AUDIO_DIR
-import aiofiles
 
-class SpeechifyTTS(TTSEngine):  
-    async def generate_audio(self, text: str,voice="sophia") -> Optional[str]:
+class SpeechifyTTS(TTSEngine):
+    def __init__(self):
+        self.session: Optional[aiohttp.ClientSession] = None
+        self.url = "https://audio.api.speechify.com/generateAudioFiles"
+
+    async def __aenter__(self):
+        await self.ensure_session()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        logger.info("Closing SpeechifyTTS")
+        await self.close()
+
+    async def close(self):
+        if self.session and not self.session.closed:
+            await self.session.close()
+            self.session = None
+
+    async def ensure_session(self):
+        if self.session is None or self.session.closed:
+            self.session = aiohttp.ClientSession()
+
+    async def generate_audio(self, text: str, voice="sophia") -> Optional[bytes]:
         logger.success(f"SpeechifyTTS generating audio for: {text}")
-        unique_id = int.from_bytes(os.urandom(8), 'big')
-        mp3_file = os.path.join(AUDIO_DIR, f"Speechify_{unique_id}.mp3")
-        url = "https://audio.api.speechify.com/generateAudioFiles"
         payload = {
             "audioFormat": "mp3",
             "paragraphChunks": [text],
@@ -24,30 +39,25 @@ class SpeechifyTTS(TTSEngine):
             }
         }
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, json=payload) as response:
-                    response.raise_for_status()
-                    json_response = await response.json()
-                    audio_data = base64.b64decode(json_response['audioStream'])
-                    async with aiofiles.open(mp3_file, 'wb') as audio_file:
-                        await audio_file.write(audio_data)
-                    logger.success(f"SpeechifyTTS audio generated: {mp3_file}")
-                    return mp3_file
+            await self.ensure_session()
+            async with self.session.post(self.url, json=payload) as response:
+                response.raise_for_status()
+                json_response = await response.json()
+                audio_data = base64.b64decode(json_response['audioStream'])
+                logger.success(f"SpeechifyTTS audio generated for text: {text}")
+                return audio_data
         except Exception as e:
-            logger.error(f"SpeechifyTTS failed to generate audio: {e}")
+            logger.error(f"SpeechifyTTS failed to generate audio: {e}", exc_info=True)
             return None
-        
-    async def generate_audio_with_retry(self, text: str, voice:str) -> Optional[str]:
+
+    async def generate_audio_with_retry(self, text: str, voice: str) -> Optional[bytes]:
         retries: int = 3
         retry_delay: float = 0.7
-        attempt = 0
-        while attempt < retries:
-            audio_file = await self.generate_audio(text,voice)
-            if audio_file:
-                return audio_file
-            attempt += 1
-            if attempt < retries:
+        for attempt in range(retries):
+            audio_data = await self.generate_audio(text, voice)
+            if audio_data:
+                return audio_data
+            if attempt < retries - 1:
+                logger.warning(f"Retrying SpeechifyTTS audio generation for text: {text} (Attempt {attempt + 2})")
                 await asyncio.sleep(retry_delay)
         return None
-
-    

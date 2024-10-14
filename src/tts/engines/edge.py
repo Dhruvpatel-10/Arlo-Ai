@@ -9,13 +9,16 @@ import aiofiles
 
 class EdgeTTS(TTSEngine):
 
-    async def generate_audio(self, text: str, voice="en-US-AvaNeural") -> Optional[str]:
+    async def generate_audio(self, text: str, voice="en-US-AvaNeural") -> Optional[bytes]:
         unique_id = int.from_bytes(os.urandom(8), 'big')
         temp_f = os.path.join(AUDIO_DIR, f'temp_text_{unique_id}.txt')
         mp3_file = os.path.join(AUDIO_DIR, f"EdgeTTS_{unique_id}.mp3")
         try:
+            # Write the text to a temporary file
             async with aiofiles.open(temp_f, 'w', encoding='utf-8') as f:
                 await f.write(text)
+            
+            # Generate the audio file using the edge-tts command
             command = [
                 'edge-tts',
                 '--voice', voice,
@@ -30,14 +33,16 @@ class EdgeTTS(TTSEngine):
             )
             try:
                 stderr = await asyncio.wait_for(process.communicate(), timeout=30)
-
                 if process.returncode == 0 and os.path.exists(mp3_file):
-                    return mp3_file
+                    # Read the generated MP3 file into bytes
+                    async with aiofiles.open(mp3_file, 'rb') as audio_file:
+                        audio_data = await audio_file.read()
+                    return audio_data
                 else:
                     error_msg = stderr.decode().strip() if stderr else "Unknown error."
                     logger.error(f"EdgeTTS failed: {error_msg}")
                     return None
-                    
+
             except asyncio.TimeoutError:
                 process.kill()
                 await process.wait()
@@ -47,11 +52,17 @@ class EdgeTTS(TTSEngine):
             logger.error(f"EdgeTTS encountered an error: {e}")
             return None
         finally:
+            # Clean up temporary files
             if os.path.exists(temp_f):
                 try:
                     os.remove(temp_f)
                 except Exception as e:
                     logger.error(f"Error deleting temporary file {temp_f}: {e}")
+            if os.path.exists(mp3_file):
+                try:
+                    os.remove(mp3_file)
+                except Exception as e:
+                    logger.error(f"Error deleting audio file {mp3_file}: {e}")
     
     async def generate_audio_with_retry(self, text: str, voice:str) -> Optional[str]:
         retries: int = 3
