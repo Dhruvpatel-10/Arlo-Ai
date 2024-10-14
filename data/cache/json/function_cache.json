@@ -34,6 +34,11 @@
             "name": "open_browser",
             "description": "Open the default browser",
             "pattern": "\b(?:open|start|launch|go(?: to)?)\b.*\b(?:browser|google|website|chrome|internet)\b|\b(?:search|find|look(?: up)?)\b.*\b(?:youtube|google)\b.*(?:for)?\b.*(?:video|song|info|query)?\b"
+        },
+        {
+            "name": "none",
+            "description": "For none action",
+            "pattern": "^(?:hello|hi|hey|hola|good to see ya|yah|cls|yes it for you|hey there|hi again|good morning|good afternoon|good evening|goodbye|see you later|that's great|awesome|I'm looking for|I want to know)\\b.*$|^(?:who|what|when|where|why|how|tell|write)\\b.*$"
         }
     ],
     "cache": {
@@ -60,6 +65,7 @@
         "it's cute now tell me 10 facts about US military": "None",
         "cls": "None",
         "Yah": "None",
-        "Good to see ya": "None"
+        "Good to see ya": "None",
+        "yes it for you": "None"
     }
 }
