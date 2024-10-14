@@ -3,42 +3,42 @@
         {
             "name": "extract_clipboard",
             "description": "Extract text from clipboard",
-            "pattern": "\\b(clipboard|copied|paste)\\b"
+            "pattern": "\b(clipboard|copied|paste)\b"
         },
         {
             "name": "take_screenshot",
             "description": "Capture screen content",
-            "pattern": "\\b(screen|screenshot|capture)\\b"
+            "pattern": "\b(screen|screenshot|capture)\b"
         },
         {
             "name": "capture_webcam",
             "description": "Capture image from webcam",
-            "pattern": "\\b(camera|webcam|visual input)\\b"
+            "pattern": "\b(camera|webcam|visual input)\b"
         },
         {
             "name": "open_word",
             "description": "Open Microsoft Word",
-            "pattern": "\\b(open|start)\\b.*\\b(word)\\b"
+            "pattern": "\b(open|start)\b.*\b(word)\b"
         },
         {
             "name": "open_excel",
             "description": "Open Microsoft Excel",
-            "pattern": "\\b(open|start)\\b.*\\b(excel)\\b"
+            "pattern": "\b(open|start)\b.*\b(excel)\b"
         },
         {
             "name": "open_powerpoint",
             "description": "Open Microsoft PowerPoint",
-            "pattern": "\\b(open|start)\\b.*\\b(powerpoint|power point)\\b"
+            "pattern": "\b(open|start)\b.*\b(powerpoint|power point)\b"
         },
         {
             "name": "open_browser",
             "description": "Open the default browser",
-            "pattern": "\b(?:open|start|launch|go(?: to)?)\b.*\b(?:browser|google|website|chrome|internet)\b|\b(?:search|find|look(?: up)?)\b.*\b(?:youtube|google)\b.*(?:for)?\b.*(?:video|song|info|query)?\b"
+            "pattern": "\b(?:open|start|launch|go(?: to)?)\b.*\b(?:browser|google|website|chrome|internet)\b|\b(?:search|find|look(?: up)?)\b.*\b(?:youtube|google)\b.*(?:for)?\b.*(?:video|song|info|query)?\b|\b(?:open)\b.*\b(?:youtube)\b"
         },
         {
             "name": "none",
-            "description": "For none action",
-            "pattern": "^(?:hello|hi|hey|hola|good to see ya|yah|cls|yes it for you|hey there|hi again|good morning|good afternoon|good evening|goodbye|see you later|that's great|awesome|I'm looking for|I want to know)\\b.*$|^(?:who|what|when|where|why|how|tell|write)\\b.*$"
+            "description": "Default action for unmatched inputs",
+            "pattern": "\b(?:hello|hi|hey|how are you|yes|no|maybe|good morning|good afternoon|good evening|thank you|thanks)\b|\b\\w+\b|\b(?:who|what|when|where|why|how)\\s+\\w+\b|\b(?:define|explain|tell me about|what is|give me information on)\\s+\\w+\b|\b(?:please|kindly|would you mind|could you|may I)\b|\b(?:what do you think about|do you prefer|which do you like better)\b"
         }
     ],
     "cache": {
@@ -66,6 +66,20 @@
         "cls": "None",
         "Yah": "None",
         "Good to see ya": "None",
-        "yes it for you": "None"
+        "yes it for you": "None",
+        "can you see me?": "capture_webcam",
+        "search x (twitter) and tell me the trends": "open_browser",
+        "no I'm just checking that everything is working right?": "None",
+        "yes what do you say what should i optimize first function calling or tts pick one": "None",
+        "no i'm going to do function calling first": "None",
+        "yes give that regex pattern": "None",
+        "can you search the abhi ka review on youtube": "open_browser",
+        "movie": "None",
+        "open youtube": "open_browser",
+        "who is more dumb claude or chatgpt": "None",
+        "who is bigger small whale or big shark": "None",
+        "ok who is more smart a king of the jungle or cunning fox": "None",
+        "Who is more smarter you or fox": "None",
+        "What is the biggest lie in the world": "None"
     }
 }

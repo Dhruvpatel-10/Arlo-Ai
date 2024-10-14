@@ -236,5 +236,19 @@
       "platform": "twitter",
       "query": "web3"
     }
+  },
+  {
+    "prompt": "search x (twitter) and tell me the trends",
+    "action": {
+      "platform": "twitter",
+      "query": "x"
+    }
+  },
+  {
+    "prompt": "can you search the abhi ka review on youtube",
+    "action": {
+      "platform": "youtube",
+      "query": "abhi ka review"
+    }
   }
 ]
