@@ -4,7 +4,6 @@ from typing import Optional
 from tts.engines.base_tts import TTSEngine
 from src.common.logger import logger
 from src.common.config import AUDIO_DIR
-from playsound import playsound
 import aiofiles
 
 class EdgeTTS(TTSEngine):
@@ -39,7 +38,7 @@ class EdgeTTS(TTSEngine):
                         audio_data = await audio_file.read()
                     return audio_data
                 else:
-                    error_msg = stderr.decode().strip() if stderr else "Unknown error."
+                    error_msg = stderr.strip() if stderr else "Unknown error."
                     logger.error(f"EdgeTTS failed: {error_msg}")
                     return None
 

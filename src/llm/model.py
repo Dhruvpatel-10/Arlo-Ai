@@ -1,3 +1,4 @@
+# model.py
 import os,json
 from groq import Groq, InternalServerError, APIConnectionError
 from dotenv import load_dotenv

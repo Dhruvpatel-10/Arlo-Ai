@@ -80,6 +80,11 @@
         "who is bigger small whale or big shark": "None",
         "ok who is more smart a king of the jungle or cunning fox": "None",
         "Who is more smarter you or fox": "None",
-        "What is the biggest lie in the world": "None"
+        "What is the biggest lie in the world": "None",
+        "hey": "None",
+        "Hey": "None",
+        "What's on the screen?": "take_screenshot",
+        "What's on the screen": "take_screenshot",
+        "Can you the youtube and search Drip or Drown": "open_browser"
     }
 }

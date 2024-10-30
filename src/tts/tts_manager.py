@@ -111,9 +111,7 @@ class TTSManager:
             producer_task.cancel()
             consumer_task.cancel()
             playback_task.cancel()
-        finally:
-            delete_af()
-            logger.info("Cleanup completed.")
+        
     
     async def close_all_engines(self):
         speechify_engine = self.engines.get("SpeechifyTTS")

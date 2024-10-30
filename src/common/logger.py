@@ -3,6 +3,7 @@ from common.config import  AUDIO_DIR, LOG_FILE, ERROR_LOG_FILE, SUCCESS_LOG_FILE
 from pathlib import Path
 import concurrent.futures
 
+logger.remove()
 logger.add(LOG_FILE,
     rotation="2 MB",         # Rotate after the log file reaches 2 MB
     retention="10 days",     # Keep log files for 10 days

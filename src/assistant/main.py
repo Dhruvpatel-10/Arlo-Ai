@@ -5,7 +5,7 @@ from func.cmdpharser import process_command
 from func.function_registry import FunctionRegistryAndCaller
 from src.url.url_parser import SearchQueryFinder
 from src.tts.tts_manager import TTSManager
-from src.common.logger import logger
+from src.common.logger import logger, delete_af
 
 async def main():
     print("\n[INFO] Initializing Assistant...")
@@ -46,6 +46,7 @@ async def main():
             print(f"ASSISTANT: {response}")
             print("="*50)
             try:
+                print("Playing Audio...")
                 await tts_manager.generate_and_play_audio(response)
             except Exception as e:
                 logger.error(f"Failed to play audio: {e}")            
@@ -55,7 +56,9 @@ async def main():
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
     finally:
+        delete_af()
         await tts_manager.close_all_engines()
+        
         # Initiate shutdown
         logger.info("Initiating shutdown sequence.")
         logger.info("Assistant terminated. Goodbye!")

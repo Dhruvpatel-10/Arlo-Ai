@@ -250,5 +250,12 @@
       "platform": "youtube",
       "query": "abhi ka review"
     }
+  },
+  {
+    "prompt": "Can you the youtube and search Drip or Drown",
+    "action": {
+      "platform": "youtube",
+      "query": "Drip or Drown"
+    }
   }
 ]
