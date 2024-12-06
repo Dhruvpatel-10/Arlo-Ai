@@ -2,8 +2,10 @@ import aiohttp
 import asyncio
 import base64
 from typing import Optional
-from tts.engines.base_tts import TTSEngine
-from src.common.logger import logger
+from src.tts.engines.base_tts import TTSEngine
+from src.common.logger import setup_logging
+
+logger = setup_logging()
 
 class SpeechifyTTS(TTSEngine):
     def __init__(self):
@@ -28,7 +30,7 @@ class SpeechifyTTS(TTSEngine):
             self.session = aiohttp.ClientSession()
 
     async def generate_audio(self, text: str, voice="sophia") -> Optional[bytes]:
-        logger.success(f"SpeechifyTTS generating audio for: {text}")
+        logger.debug(f"SpeechifyTTS generating audio for: {text}")
         payload = {
             "audioFormat": "mp3",
             "paragraphChunks": [text],
@@ -44,7 +46,7 @@ class SpeechifyTTS(TTSEngine):
                 response.raise_for_status()
                 json_response = await response.json()
                 audio_data = base64.b64decode(json_response['audioStream'])
-                logger.success(f"SpeechifyTTS audio generated for text: {text}")
+                logger.info(f"SpeechifyTTS audio generated for text: {text}")
                 return audio_data
         except Exception as e:
             logger.error(f"SpeechifyTTS failed to generate audio: {e}", exc_info=True)
@@ -61,3 +63,12 @@ class SpeechifyTTS(TTSEngine):
                 logger.warning(f"Retrying SpeechifyTTS audio generation for text: {text} (Attempt {attempt + 2})")
                 await asyncio.sleep(retry_delay)
         return None
+
+if __name__ == "__main__":
+    tts = SpeechifyTTS()
+    audio_data = asyncio.run(tts.generate_audio_with_retry("Hello, how are you?", "jamie"))
+    # print(audio_data)
+    with open("test.mp3", "wb") as f:
+        f.write(audio_data)
+    
+

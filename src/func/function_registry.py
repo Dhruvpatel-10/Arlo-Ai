@@ -5,12 +5,11 @@ import json
 import aiofiles
 from typing import Dict, Any, List, Tuple
 from common.config import FUNC_CACHE_DIR
-from common.logger import logger
+from common.logger import setup_logging
 from groq import AsyncGroq
-from dotenv import load_dotenv
 
-load_dotenv()
-groq_api = os.getenv("GROQ_API_FUNC")
+groq_api = os.getenv("GROQ_FUNC_CALL_API")
+logger = setup_logging()
 
 class FunctionRegistryAndCaller:
     def __init__(self, cache_file=FUNC_CACHE_DIR):
@@ -77,7 +76,6 @@ class FunctionRegistryAndCaller:
     async def llm_based_call(self, prompt: str) -> str:
         sys_msg = '''You are an AI assistant tasked with selecting exactly one action from this list based on the user's input: capture_webcam, extract_clipboard, take_screenshot, open_word, open_excel, open_powerpoint, open_browser, None. Respond with only one action word, exactly as listed. Choose 'open_browser' for any request to open a specific website, search engine, or platform. Respond with 'None' if no action clearly applies. You are not allowed to return any action that is not on the list. If the input does not explicitly map to an action in the list, return 'None.' Your response must contain exactly one word from the list. And also know that user prompt is forwarded to LLM any way so if the prompt is like a LLM can answer it then return 'None'. 
             '''
-
         function_convo = [
             {"role": "system", "content": sys_msg},
             {"role": "user", "content": prompt}
@@ -97,6 +95,7 @@ class FunctionRegistryAndCaller:
             )
 
             response = chat_completion.choices[0].message.content.strip()
+            logger.info(f"Response from Function LLM: {response}")
             if not response:
                 raise ValueError("Empty response from LLM")
             

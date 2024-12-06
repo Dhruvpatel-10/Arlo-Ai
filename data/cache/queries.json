@@ -257,5 +257,33 @@
       "platform": "youtube",
       "query": "Drip or Drown"
     }
+  },
+  {
+    "prompt": "can you open youtube and search 'take me to the church'",
+    "action": {
+      "platform": "youtube",
+      "query": "take me to the church"
+    }
+  },
+  {
+    "prompt": "search miss.komolinii_ on instagram",
+    "action": {
+      "platform": "instagram",
+      "query": "miss.komolinii_"
+    }
+  },
+  {
+    "prompt": "now search for sachin tendulkar",
+    "action": {
+      "platform": "google",
+      "query": "sachin tendulkar"
+    }
+  },
+  {
+    "prompt": "I want to search him on insta",
+    "action": {
+      "platform": "instagram",
+      "query": "him"
+    }
   }
 ]

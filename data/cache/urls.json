@@ -17,14 +17,18 @@
     },
     "facebook": {
       "base_url": "https://www.facebook.com",
-      "search_path": ""
+      "search_path": "/public/Search/"
     },
     "github": {
       "base_url": "https://github.com",
-      "search_path": ""
+      "search_path": "search?q="
     },
     "spotify": {
       "base_url": "https://open.spotify.com/",
       "search_path": "/search/"
+    },
+    "instagram": {
+      "base_url": "https://www.instagram.com",
+      "search_path": "/"
     }
   }

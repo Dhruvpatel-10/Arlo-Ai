@@ -4,13 +4,13 @@ import urllib.parse
 import json
 from typing import Dict, Any, Tuple, Optional
 from functools import lru_cache
-from dotenv import load_dotenv;load_dotenv()
 import groq
 from common.config import URL_DIR, QUERY_DIR
-from src.common.logger import logger
+from src.common.logger import setup_logging
 
 
 GROQ_API = os.getenv("GROQ_URL")
+logger = setup_logging()
 
 class SearchQueryFinder:
     def __init__(self, queries_file: str = QUERY_DIR, urls_file: str = URL_DIR, groq_api_key: str = GROQ_API):
@@ -137,7 +137,7 @@ Output:
 
         elif base_url and (not search_path or not query):
             # If query is None or search_path is empty, return base_url
-            logger.success(f"Constructed URL with just base URL: {base_url}")
+            logger.debug(f"Constructed URL with just base URL: {base_url}")
             return base_url
 
         elif search_path is None:
@@ -149,7 +149,7 @@ Output:
             google_base_url = google_url_info["base_url"]
             google_search_path = google_url_info["search_path"]
             encoded_query = urllib.parse.quote(f"{platform} {query or ''}")
-            logger.success(f"Google fallback URL: {google_base_url}{google_search_path}{encoded_query}")
+            logger.debug(f"Google fallback URL: {google_base_url}{google_search_path}{encoded_query}")
             return f"{google_base_url}{google_search_path}{encoded_query}"
 
         else:

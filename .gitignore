@@ -1,13 +1,11 @@
 !data/audio
 !data/cache/logs
 !data/images
-data/cache/logs/*.log
+data/logs
 data/cache/json/history.json
-.venv
+env
 .env
 __pycache__
-test.py
-test2.py
 screenshot.jpg
 webcam.jpg
 import_test.py

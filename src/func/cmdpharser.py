@@ -1,5 +1,7 @@
 from func.function_define import *
-from src.common.logger import logger
+from src.common.logger import setup_logging
+
+logger = setup_logging()
 
 def process_command(command: str,user_prompt: str = None, url: str = None) -> str:
 

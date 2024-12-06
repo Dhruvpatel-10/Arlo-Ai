@@ -2,9 +2,11 @@ import os
 import asyncio
 from typing import Optional
 from tts.engines.base_tts import TTSEngine
-from src.common.logger import logger
+from src.common.logger import setup_logging
 from src.common.config import AUDIO_DIR
 import aiofiles
+
+logger = setup_logging()
 
 class EdgeTTS(TTSEngine):
 

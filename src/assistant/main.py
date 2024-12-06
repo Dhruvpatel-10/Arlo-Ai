@@ -5,11 +5,11 @@ from func.cmdpharser import process_command
 from func.function_registry import FunctionRegistryAndCaller
 from src.url.url_parser import SearchQueryFinder
 from src.tts.tts_manager import TTSManager
-from src.common.logger import logger, delete_af
+from src.common.logger import setup_logging, delete_af
 
 async def main():
-    print("\n[INFO] Initializing Assistant...")
-    logger.info("Initializing Assistant...")
+    logger = setup_logging()
+    logger.info("Initializing assistant...")
     function_caller = await FunctionRegistryAndCaller.create()
     search_query = SearchQueryFinder()
     tts_manager = TTSManager()

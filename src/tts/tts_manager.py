@@ -7,8 +7,10 @@ import soundfile as sf
 from tts.engines import edge, speechify
 from blingfire import text_to_sentences
 from tts.voices import VOICES
-from common.logger import logger, delete_af
+from common.logger import setup_logging
 import numpy as np
+
+logger = setup_logging()
 
 class TTSManager:
     def __init__(self, max_concurrent_tasks: int = 20, audio_queue_maxsize: int = 100) -> None:
@@ -98,7 +100,7 @@ class TTSManager:
             if self.audio_queue.empty() and not self.buffer:
                 break
 
-    async def generate_and_play_audio(self, response: str, voice_name: str = "Ava_Edge") -> None:
+    async def generate_and_play_audio(self, response: str, voice_name: str = "Carly_Speechify") -> None:
         self.next_index_to_play = 0
         consumer_task = create_task(self.consumer())
         producer_task = create_task(self.producer(response, voice_name))

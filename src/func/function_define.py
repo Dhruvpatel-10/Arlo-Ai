@@ -2,49 +2,47 @@ import os
 import cv2
 import pyperclip as pc
 from PIL import ImageGrab, Image
-import google.generativeai as genai
-from dotenv import load_dotenv
+import base64 
+from groq import Groq
 import subprocess
 from common.config import IMAGES_DIR
+from common.logger import setup_logging
 import webbrowser
+import sys
+import base64
 
-# Load environment variables
-load_dotenv()
-genai_api = os.getenv("GEMINI_API")
-genai.configure(api_key=genai_api)
+api_key = os.getenv("GROQ_VISION_API")
+client = Groq(api_key= api_key)
+logger = setup_logging()
 
 # Initialize webcam
 web_cam = cv2.VideoCapture(0)
 dir_path = IMAGES_DIR
 
-# Generation configuration for AI
-generation_config = {
-    'temperature': 0.7,
-    'top_p': 1,
-    'top_k': 1,
-    'max_output_tokens': 1080
-}
-
-# Safety settings for AI model
-safety_settings = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-]
-
-# Initialize the AI model
-model = genai.GenerativeModel('gemini-1.5-flash-latest',
-                              generation_config=generation_config,
-                              safety_settings=safety_settings)
-
 # Function to take a screenshot
 def take_screenshot():
-    path = os.path.join(dir_path, 'screenshot.jpg')
-    screenshot = ImageGrab.grab()
-    rgb_screenshot = screenshot.convert('RGB')
-    rgb_screenshot.save(path, quality=15)
-    return path
+    if sys.platform == 'linux':
+        path = os.path.join(dir_path, 'screenshot.jpg')
+        screenshot = ImageGrab.grab()
+        rgb_screenshot = screenshot.convert('RGB')
+        rgb_screenshot.save(path, quality=15)
+        return path
+    else:
+        # Define the file path for the screenshot
+        raw_path = os.path.join(dir_path, "raw_screenshot.png")  # Temporary PNG file
+        final_path = os.path.join(dir_path, "screenshot.jpg")    # Compressed final file
+
+        # Take the screenshot using gnome-screenshot
+        subprocess.run(["gnome-screenshot", "-f", raw_path])  # Save as PNG
+
+        # Open the PNG, convert to RGB, and save as compressed JPEG
+        with Image.open(raw_path) as img:
+            img = img.convert("RGB")  # Ensure it's in RGB mode
+            img.save(final_path, quality=15)  # Save with reduced quality
+
+        # Optionally, delete the temporary PNG file
+        # os.remove(raw_path)
+        return final_path
 
 # Function to capture image from webcam
 def web_cam_capture():
@@ -79,17 +77,38 @@ def get_clipboard_text():
 
 # Function to generate a vision prompt
 def vision_prompt(prompt, photo_path) -> str:
-    img = Image.open(photo_path)
-    vision_prompt_text = (
-        f'You are the vision analysis AI that provides semantic meaning from images to provide context '
-        f'to send to another AI that will create a response to the user. Do not respond as the AI assistant '
-        f'to the user. Instead, take the user prompt input and try to extract all meaning from the photo '
-        f'relevant to the user prompt. Then generate as much objective data about the image for the AI '
-        f'assistant who will respond to the user. \nUSER PROMPT: {prompt}'
-    )
-    response = model.generate_content([vision_prompt_text, img])
-    os.remove(photo_path)
-    return response.text
+    vision_prompt_text = (f'''You are a vision analysis AI designed to extract semantic information from images, focusing on screenshots and webcam captures. Your goal is to provide concise, detailed descriptions that include:
+    1. Exact text in the image
+    2. Contextual elements and their significance
+    3. Screen contents, interface details, and composition
+    4. Relevant metadata or insights
+
+    Generate a neutral, single-paragraph description that highlights key elements relevant to the user's query, providing context for another AI to craft a final response. Avoid assumptions or irrelevant details; focus only on factual, observable information directly related to the prompt. USER PROMPT: {prompt}''')
+    
+    logger.debug(f"{dir_path} photo path: {photo_path}")
+    
+    with open(photo_path, "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+
+    chat_completion = client.chat.completions.create(
+    messages=[{
+            "role": "user",
+            "content": [
+                {"type": "text", "text":vision_prompt_text},
+                {
+                    "type": "image_url",
+                    "image_url": {
+
+                        "url": f"data:image/jpeg;base64,{base64_image}",
+                    },
+                },
+            ],
+        }
+    ],
+    model="llama-3.2-90b-vision-preview",
+)
+    # os.remove(photo_path)
+    return chat_completion.choices[0].message.content
 
 def open_word():
     try:
