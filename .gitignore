@@ -1,8 +1,5 @@
-!data/audio
-!data/cache/logs
-!data/images
 data/logs
-data/cache/json/history.json
+data/cache/history.json
 env
 .env
 __pycache__
