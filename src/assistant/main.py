@@ -36,7 +36,7 @@ async def main():
                     url_parser = search_query.find_query(prompt=user_prompt)
                     f_exe, visual_context = process_command(command=action, url=url_parser)
                 else:
-                    logger.info("PROCESSING COMMAND")
+                    logger.info("EXECUTING FUNCTION")
                     f_exe, visual_context = process_command(command=action, user_prompt=user_prompt)
                 logger.info(f"f_exe: {f_exe} || visual_context: {visual_context}")
 
