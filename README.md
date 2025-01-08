@@ -45,10 +45,6 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-## Run this in terminal
-```bash
-python -m spacy download en_core_web_sm
-```
 
 ## Environment Variables
 
@@ -64,7 +60,7 @@ This project uses a `.env` file to manage environment-specific settings like API
 
 2. **Open the `.env` file and update the environment variables as needed**:
 
-   - Replace placeholders with your actual values (e.g., API keys, paths).
+   - Replace placeholders with your actual values (e.g., API keys).
 
 3. **Save the `.env` file**.
 
