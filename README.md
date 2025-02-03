@@ -10,7 +10,7 @@ This is an AI Assistant project named Lexi that uses speech recognition and text
   >
   > ### This are some supported hotwords
   >
-  > **'picovoice', 'terminator', 'americano', 'hey siri', 'bumblebee', 'ok google', 'blueberry', 'jarvis', 'pico clock', 'porcupine', 'grapefruit', 'hey google', 'alexa'**
+  > **hey arlo, stop arlo **
 - Text-to-speech synthesis
 
 ## Requirements
