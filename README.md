@@ -10,7 +10,7 @@ This is an AI Assistant project named Lexi that uses speech recognition and text
   >
   > ### This are some supported hotwords
   >
-  > **hey arlo, stop arlo **
+  > ** hey arlo, stop arlo **
 - Text-to-speech synthesis
 
 ## Requirements
