@@ -1,7 +1,7 @@
 # model.py
 import os,json
 from groq import Groq, InternalServerError, APIConnectionError
-from src.common.config import HISTORY_DIR
+from src.common.config import HISTORY_DIR , MAIN_LLM_MODEL
 from src.common.logger import setup_logging
 from time import sleep
 
@@ -59,7 +59,7 @@ def groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_de
     for attempt in range(max_retries):
         try:
             chat_completion = groq_client.chat.completions.create(
-                model="llama-3.1-70b-versatile", 
+                model=MAIN_LLM_MODEL, 
                 messages=convo2, 
                 max_tokens=1500, 
                 temperature=1,

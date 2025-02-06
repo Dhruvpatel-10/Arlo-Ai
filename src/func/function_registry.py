@@ -4,7 +4,7 @@ import os
 import json
 import aiofiles
 from typing import Dict, Any, List, Tuple
-from common.config import FUNC_CACHE_DIR
+from common.config import FUNC_CACHE_DIR, FUNC_LLM_MODEL
 from common.logger import setup_logging
 from groq import AsyncGroq
 
@@ -87,7 +87,7 @@ class FunctionRegistryAndCaller:
         try:
             # Call the async chat completion API
             chat_completion = await groq_client.chat.completions.create(
-                model="llama-3.1-70b-versatile",
+                model=FUNC_LLM_MODEL,
                 messages=function_convo,
                 temperature=0.1,
                 top_p=0.1,

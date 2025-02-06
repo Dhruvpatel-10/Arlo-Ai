@@ -5,7 +5,7 @@ from PIL import ImageGrab, Image
 import base64 
 from groq import Groq
 import subprocess
-from common.config import IMAGES_DIR
+from common.config import IMAGES_DIR, VISION_LLM_MODEL
 from common.logger import setup_logging
 import webbrowser
 import sys
@@ -105,7 +105,7 @@ def vision_prompt(prompt, photo_path) -> str:
             ],
         }
     ],
-    model="llama-3.2-90b-vision-preview",
+    model=VISION_LLM_MODEL,
 )
     # os.remove(photo_path)
     return chat_completion.choices[0].message.content

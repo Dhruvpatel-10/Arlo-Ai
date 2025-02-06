@@ -5,7 +5,7 @@ import json
 from typing import Dict, Any, Tuple, Optional
 from functools import lru_cache
 import groq
-from common.config import URL_DIR, QUERY_DIR
+from common.config import URL_DIR, QUERY_DIR, URL_LLM_MODEL
 from src.common.logger import setup_logging
 
 
@@ -96,7 +96,7 @@ Output:
 
         try:
             chat_completion = self.groq_client.chat.completions.create(
-                model="llama-3.1-70b-versatile",
+                model=URL_LLM_MODEL,
                 messages=conversation,
             )
 

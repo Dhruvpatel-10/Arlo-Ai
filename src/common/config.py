@@ -26,3 +26,7 @@ QUERY_DIR = CACHE_DIR / 'queries.json'
 HISTORY_DIR = CACHE_DIR / 'history.json'
 FUNC_CACHE_DIR = CACHE_DIR /'function_cache.json'
 
+MAIN_LLM_MODEL = "llama-3.3-70b-versatile"
+FUNC_LLM_MODEL = "llama-3.3-70b-specdec"
+VISION_LLM_MODEL = "llama-3.2-90b-vision-preview"
+URL_LLM_MODEL = "llama-3.3-70b-specdec"
