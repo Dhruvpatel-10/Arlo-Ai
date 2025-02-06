@@ -1,75 +1,92 @@
-# AI Assistant
+# Arlo Voice Assistant 🎙️
 
-This is an AI Assistant project named Lexi that uses speech recognition and text-to-speech functionalities.
+A powerful voice assistant that helps you control your computer and perform various tasks hands-free. Arlo can handle everything from opening applications to web searches and system operations.
 
-## Features
+## 🌟 Features
 
-- Speech recognition using a web-based real-time speech-to-text service
-- Hotword detection
-  > [!NOTE]
-  >
-  > ### This are some supported hotwords
-  >
-  > **hey arlo, stop arlo**
-- Text-to-speech synthesis
+- **Web Navigation**: Open and search across multiple platforms
+  - Google Search
+  - Social Media (Instagram, X.com/Twitter)
+  - Custom website searches
+- **System Operations**:
+  - Take screenshots
+  - Access webcam
+  - System navigation
+- **Office Integration**:
+  - Microsoft Excel
+  - Microsoft Word
+  - Microsoft PowerPoint
+- **Browser Control**: Chrome integration for web operations
 
-## Requirements
+## 🔧 Requirements
 
 - Python 3.8+
 - [Google Chrome](https://www.google.com/chrome/)
+- Anaconda/Miniconda
 
-## Set Up a Virtual Environment
+### Installing Conda
 
-**Create the Virtual Environment**
+If you don't have Conda installed:
 
-```
-python -m venv venv
-```
+1. **Download the installer**:
+   - Windows: [Miniconda for Windows](https://docs.conda.io/en/latest/miniconda.html)
+   - Linux: [Miniconda for Linux](https://docs.conda.io/en/latest/miniconda.html)
 
-**Activate the Virtual Environment**
+2. **Install Miniconda**:
+   - Windows: Run the downloaded `.exe` file
+   - Linux: Run in terminal:
+     ```bash
+     bash Miniconda3-latest-Linux-x86_64.sh
+     ```
 
-- On Windows:
+3. **Verify installation**:
+   ```bash
+   conda --version
+   ```
 
-```
-venv\Scripts\activate.ps1
-```
+## 🚀 Installation
 
-- On macOS/Linux:
+### Set Up Conda Environment
 
-```
-source venv/bin/activate
-```
-
-## Install Requirements.txt
-
+**Windows**:
 ```bash
-pip install -r requirements.txt
+# Create and activate environment
+conda env create -f environment.yml
+conda activate arlo
 ```
 
-## Environment Variables
+**Linux**:
+```bash
+# Create and activate environment
+conda env create -f environment.yml
+source activate arlo
+```
 
-This project uses a `.env` file to manage environment-specific settings like API keys, secret tokens, etc. An example file `.env.example` is provided in the source code.
+## ⚙️ Environment Variables
+
+This project uses a `.env` file to manage environment-specific settings like API keys and secret tokens.
 
 ### Setting Up the `.env` File
 
-1. **Copy the `.env.example` file to a new file named `.env`**:
-
+1. **Create your `.env` file**:
    ```bash
    cp .env.example .env
    ```
 
-2. **Open the `.env` file and update the environment variables as needed**:
+2. **Configure Variables**:
+   - Open `.env` in your preferred text editor
+   - Replace placeholder values with your actual credentials
+   - Save the file
 
-   - Replace placeholders with your actual values (e.g., API keys).
+## 🎯 Running Arlo
 
-3. **Save the `.env` file**.
-
-After setting up the `.env` file, the project will automatically load these variables when you run the application.
-
-## Run
-
-```
+```bash
 python run.py
 ```
 
-**_If not working try to restart your IDE_**
+## 🔍 Troubleshooting
+
+- If you encounter any issues after installation:
+  1. Ensure Conda environment is activated
+  2. Verify all environment variables are set correctly
+  3. Try restarting your IDE or terminal
