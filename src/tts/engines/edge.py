@@ -10,7 +10,7 @@ logger = setup_logging()
 
 class EdgeTTS(TTSEngine):
 
-    async def generate_audio(self, text: str, voice="en-US-AvaNeural") -> Optional[bytes]:
+    async def generate_audio(self, text: str, voice="en-US-AvaNeural", InModule=False) -> Optional[bytes]:
         unique_id = int.from_bytes(os.urandom(8), 'big')
         temp_f = os.path.join(AUDIO_DIR, f'temp_text_{unique_id}.txt')
         mp3_file = os.path.join(AUDIO_DIR, f"EdgeTTS_{unique_id}.mp3")
@@ -59,7 +59,7 @@ class EdgeTTS(TTSEngine):
                     os.remove(temp_f)
                 except Exception as e:
                     logger.error(f"Error deleting temporary file {temp_f}: {e}")
-            if os.path.exists(mp3_file):
+            if os.path.exists(mp3_file) and InModule == False:
                 try:
                     os.remove(mp3_file)
                 except Exception as e:
@@ -80,9 +80,9 @@ class EdgeTTS(TTSEngine):
 
 if __name__ == "__main__":
     tts = EdgeTTS()
+    paragraph = '''Paragraphs are the building blocks of papers. Many students define paragraphs in terms of length: a paragraph is a group of at least five sentences, a paragraph is half a page long, etc. In reality, though, the unity and coherence of ideas among sentences is what constitutes a paragraph. A paragraph is defined as “a group of sentences or a single sentence that forms a unit” (Lunsford and Connors 116). Length and appearance do not determine whether a section in a paper is a paragraph. For instance, in some styles of writing, particularly journalistic styles, a paragraph can be just one sentence long. Ultimately, a paragraph is a sentence or group of sentences that support one main idea. In this handout, we will refer to this as the “controlling idea,” because it controls what happens in the rest of the paragraph.'''
     async def main():
-        audio_file = await tts.generate_audio_with_retry("EdgeTTS is ready to assist you.")
-        await tts.play_audio(audio_file)
-        await tts.cleanup(audio_file)
+        audio_file = await tts.generate_audio(text=paragraph, InModule=True)
+        print(audio_file)
 
     asyncio.run(main())
