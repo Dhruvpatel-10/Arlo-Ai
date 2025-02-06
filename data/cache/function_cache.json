@@ -113,6 +113,10 @@
         "search miss.komolinii_ on instagram": "open_browser",
         "now search for sachin tendulkar": "open_browser",
         "I want to search him on insta": "open_browser",
-        "yes": "None"
+        "yes": "None",
+        "What's up buddy?": "None",
+        "can you check what I've copied and tell me what it is?": "extract_clipboard",
+        "can you open the browser": "open_browser",
+        "take a screenshot and tell me what you see?": "take_screenshot"
     }
 }

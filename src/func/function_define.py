@@ -1,75 +1,138 @@
 import os
 import cv2
 import pyperclip as pc
-from PIL import ImageGrab, Image
+from PIL import Image
 import base64 
 from groq import Groq
 import subprocess
 from common.config import IMAGES_DIR, VISION_LLM_MODEL
 from common.logger import setup_logging
 import webbrowser
-import sys
-import base64
+
 
 api_key = os.getenv("GROQ_VISION_API")
 client = Groq(api_key= api_key)
 logger = setup_logging()
 
 # Initialize webcam
-web_cam = cv2.VideoCapture(0)
 dir_path = IMAGES_DIR
 
 # Function to take a screenshot
 def take_screenshot():
-    if sys.platform == 'linux':
-        path = os.path.join(dir_path, 'screenshot.jpg')
-        screenshot = ImageGrab.grab()
-        rgb_screenshot = screenshot.convert('RGB')
-        rgb_screenshot.save(path, quality=15)
-        return path
-    else:
-        # Define the file path for the screenshot
-        raw_path = os.path.join(dir_path, "raw_screenshot.png")  # Temporary PNG file
-        final_path = os.path.join(dir_path, "screenshot.jpg")    # Compressed final file
+    try:
+        import mss
+        use_mss = True
+    except ImportError:
+        use_mss = False
 
-        # Take the screenshot using gnome-screenshot
-        subprocess.run(["gnome-screenshot", "-f", raw_path])  # Save as PNG
+    try:
+        import pyscreenshot
+        use_pyscreenshot = True
+    except ImportError:
+        use_pyscreenshot = False
 
-        # Open the PNG, convert to RGB, and save as compressed JPEG
-        with Image.open(raw_path) as img:
-            img = img.convert("RGB")  # Ensure it's in RGB mode
-            img.save(final_path, quality=15)  # Save with reduced quality
+    quality = 95
+    scale = 1.0
+    max_size_mb=1
+    screenshot = None
+    min_quality=60
+    min_scale=0.5
+    output_path = os.path.join(dir_path, 'screenshot.jpg')
 
-        # Optionally, delete the temporary PNG file
-        # os.remove(raw_path)
-        return final_path
+    # Try capturing with mss first
+    if use_mss:
+        try:
+            with mss.mss() as sct:
+                monitor = sct.monitors[1]  # Primary monitor
+                sct_img = sct.grab(monitor)
+                screenshot = Image.frombytes('RGB', sct_img.size, sct_img.rgb)
+        except Exception as e:
+            print(f"mss failed: {e}, falling back to pyscreenshot.")
+
+    # Fallback to pyscreenshot if mss failed or unavailable
+    if screenshot is None and use_pyscreenshot:
+        try:
+            screenshot = pyscreenshot.grab().convert('RGB')
+        except Exception as e:
+            print(f"pyscreenshot failed: {e}. No screenshot method available.")
+            return None
+
+    if screenshot is None:
+        print("No screenshot method available.")
+        return None
+
+    orig_width, orig_height = screenshot.size
+
+    # Optimize size
+    while True:
+        img = (screenshot.resize((int(orig_width * scale), int(orig_height * scale)),
+                                  Image.Resampling.LANCZOS)
+               if scale < 1.0 else screenshot).convert('RGB')
+
+        img.save(output_path, 'JPEG', quality=quality)
+        size_mb = os.path.getsize(output_path) / (1024 * 1024)
+
+        if size_mb <= max_size_mb:
+            break
+
+        # Reduce quality first, then scale down if needed
+        if quality > min_quality:
+            quality = max(quality - 5, min_quality)
+        elif scale > min_scale:
+            scale *= 0.9
+        else:
+            print(f"Could not reduce file size below {max_size_mb}MB")
+            break
+
+    print(f"Screenshot saved: {output_path} ({size_mb:.2f}MB, quality={quality}, scale={scale:.2f})")
+    return output_path
+
 
 # Function to capture image from webcam
 def web_cam_capture():
-    global web_cam
-    if not web_cam.isOpened():
-        print('Error: Camera did not open successfully')
-        web_cam = cv2.VideoCapture(0) 
-        if not web_cam.isOpened():
-            print('Error: Camera could not be reinitialized')
-            return
-    path = os.path.join(dir_path, 'webcam.jpg')
-    ret, frame = web_cam.read()
-    if ret:
-        cv2.imwrite(path, frame)
-        print('Webcam image captured successfully.')
-    else:
-        print('Error: Failed to capture image')
+    camera_indices=[0, 1, -1]
+    image_path = os.path.join(dir_path, 'webcam.jpg')
+
+    # Iterate over the provided camera indices
+    for idx in camera_indices:
+        print(f"Trying camera index: {idx}")
+        cap = None
+        try:
+            cap = cv2.VideoCapture(idx)
+            if not cap.isOpened():
+                print(f"Warning: Camera index {idx} could not be opened.")
+                continue  # Try next index
+
+            # Try to capture a valid frame
+            for attempt in range(5):
+                ret, frame = cap.read()
+                if ret and frame is not None:
+                    try:
+                        cv2.imwrite(image_path, frame)
+                        print(f"Image captured successfully from camera index {idx} and saved at: {image_path}")
+                        cap.release()
+                        return image_path
+                    except Exception as e:
+                        print(f"Error saving image from camera index {idx}: {e}")
+                        cap.release()
+                        return False
+                else:
+                    print(f"Attempt {attempt + 1}: Failed to capture a valid frame from camera index {idx}.")
+            print(f"Error: No valid frame captured from camera index {idx} after multiple attempts.")
+        except Exception as e:
+            print(f"Exception while accessing camera index {idx}: {e}")
+        finally:
+            if cap is not None:
+                cap.release()
     
-    web_cam.release()
-    cv2.destroyAllWindows()
-    web_cam = cv2.VideoCapture(0)
-    return path
+    print("Error: Could not capture image from any of the provided camera indices.")
+    return False
 
 # Function to get text from clipboard
 def get_clipboard_text():
     clipboard_content = pc.paste()
     if isinstance(clipboard_content, str):
+        logger.info(f"CLIPBOARD CONTENT: {clipboard_content}")
         return clipboard_content
     else:
         print('No clipboard text to copy')
@@ -89,6 +152,8 @@ def vision_prompt(prompt, photo_path) -> str:
     
     with open(photo_path, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+        base64_size = (os.path.getsize(photo_path) * 4) // 3 
+        logger.debug(f"Base64 size: {base64_size / 1024:.2f} KB")
 
     chat_completion = client.chat.completions.create(
     messages=[{

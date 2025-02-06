@@ -285,5 +285,12 @@
       "platform": "instagram",
       "query": "him"
     }
+  },
+  {
+    "prompt": "can you open the browser",
+    "action": {
+      "platform": "google",
+      "query": null
+    }
   }
 ]
