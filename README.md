@@ -90,3 +90,4 @@ python run.py
   1. Ensure Conda environment is activated
   2. Verify all environment variables are set correctly
   3. Try restarting your IDE or terminal
+  3. Try restarting your IDE or terminal

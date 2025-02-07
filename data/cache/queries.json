@@ -292,5 +292,12 @@
       "platform": "google",
       "query": null
     }
+  },
+  {
+    "prompt": "search for ms dhoni on google",
+    "action": {
+      "platform": "google",
+      "query": "ms dhoni"
+    }
   }
 ]

@@ -117,6 +117,8 @@
         "What's up buddy?": "None",
         "can you check what I've copied and tell me what it is?": "extract_clipboard",
         "can you open the browser": "open_browser",
-        "take a screenshot and tell me what you see?": "take_screenshot"
+        "take a screenshot and tell me what you see?": "take_screenshot",
+        "search for ms dhoni on google": "open_browser",
+        "hello": "None"
     }
 }
