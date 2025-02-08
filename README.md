@@ -51,15 +51,15 @@ If you don't have Conda installed:
 **Windows**:
 ```bash
 # Create and activate environment
-conda env create -f environment.yml
-conda activate arlo
+conda env create -f win_env.yml
+conda activate Arlo_env
 ```
 
 **Linux**:
 ```bash
 # Create and activate environment
 conda env create -f environment.yml
-source activate arlo
+source activate Arlo_env
 ```
 
 ## ⚙️ Environment Variables
