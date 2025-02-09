@@ -48,20 +48,12 @@ If you don't have Conda installed:
 
 ### Set Up Conda Environment
 
-**Windows**:
+**Virtual Environment**:
 ```bash
 # Create and activate environment
-conda env create -f win_env.yml
+conda env create -f env.yml
 conda activate Arlo_env
 ```
-
-**Linux**:
-```bash
-# Create and activate environment
-conda env create -f environment.yml
-source activate Arlo_env
-```
-
 ## ⚙️ Environment Variables
 
 This project uses a `.env` file to manage environment-specific settings like API keys and secret tokens.
