@@ -1,1 +1,10 @@
-[]
+[
+    {
+        "role": "user",
+        "content": "hey what's up"
+    },
+    {
+        "role": "assistant",
+        "content": "Not much, just hanging out. You know, the usual - waiting for someone awesome to chat with. That someone is you, by the way. What's new with you?"
+    }
+]

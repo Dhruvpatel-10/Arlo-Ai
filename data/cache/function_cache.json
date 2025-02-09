@@ -119,6 +119,7 @@
         "can you open the browser": "open_browser",
         "take a screenshot and tell me what you see?": "take_screenshot",
         "search for ms dhoni on google": "open_browser",
-        "hello": "None"
+        "hello": "None",
+        "hey what's up": "None"
     }
 }

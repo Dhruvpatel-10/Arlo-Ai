@@ -18,7 +18,7 @@ logger = setup_logging()
 dir_path = IMAGES_DIR
 
 # Function to take a screenshot
-def take_screenshot():
+def take_screenshot():      
     try:
         import mss
         use_mss = True
