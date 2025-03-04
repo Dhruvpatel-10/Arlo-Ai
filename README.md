@@ -88,7 +88,7 @@ python run.py
 This project is licensed under the Apache License, Version 2.0. You may use it in compliance with the License.
 
 You can read the full license here:
-🔗 (Apache License 2.0)[https://www.apache.org/licenses/LICENSE-2.0]
+🔗 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 Unless required by law or agreed upon in writing, this software is distributed "as is", without warranties or guarantees. See the License for more details.
 
