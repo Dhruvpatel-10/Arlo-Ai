@@ -85,18 +85,12 @@ python run.py
   3. Try restarting your IDE or terminal
 
 ## 📄 License
-Copyright 2025 Dhruv Patel
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+This project is licensed under the Apache License, Version 2.0. You may use it in compliance with the License.
 
-      http://www.apache.org/licenses/LICENSE-2.0
+You can read the full license here:
+🔗 (Apache License 2.0)[https://www.apache.org/licenses/LICENSE-2.0]
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Unless required by law or agreed upon in writing, this software is distributed "as is", without warranties or guarantees. See the License for more details.
 
 ## 🤝 Contributing
-By contributing to this project, you agree to the terms of the Apache License, Version 2.0.
+By contributing to this project, you agree that your contributions will be licensed under the Apache License, Version 2.0.
