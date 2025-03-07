@@ -6,5 +6,13 @@
     {
         "role": "assistant",
         "content": "Not much, just hanging out. You know, the usual - waiting for someone awesome to chat with. That someone is you, by the way. What's new with you?"
+    },
+    {
+        "role": "user",
+        "content": "hey what's buddy"
+    },
+    {
+        "role": "assistant",
+        "content": "Buddy, huh? That's cute. You're really bringing out the casual vibes today. I'm feeling it, let's keep it chill."
     }
 ]

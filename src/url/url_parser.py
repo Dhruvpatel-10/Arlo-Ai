@@ -5,8 +5,8 @@ import json
 from typing import Dict, Any, Tuple, Optional
 from functools import lru_cache
 import groq
-from common.config import URL_DIR, QUERY_DIR, URL_LLM_MODEL
-from src.common.logger import setup_logging
+from src.utils.config import URL_DIR, QUERY_DIR, URL_LLM_MODEL
+from src.utils.logger import setup_logging
 
 
 GROQ_API = os.getenv("GROQ_URL")

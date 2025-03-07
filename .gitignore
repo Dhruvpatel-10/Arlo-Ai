@@ -5,7 +5,7 @@ env
 __pycache__
 screenshot.jpg
 webcam.jpg
-import_test.py
+data/models/faster_whisper/*
 data/audio/*.mp3
 data/images/*.jpg
 test

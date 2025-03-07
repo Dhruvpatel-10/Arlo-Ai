@@ -1,8 +1,8 @@
 # model.py
 import os,json
 from groq import Groq, InternalServerError, APIConnectionError
-from src.common.config import HISTORY_DIR , MAIN_LLM_MODEL
-from src.common.logger import setup_logging
+from src.utils.config import HISTORY_DIR , MAIN_LLM_MODEL
+from src.utils.logger import setup_logging
 from time import sleep
 
 groq_api = os.getenv("GROQ_API")
@@ -42,7 +42,7 @@ def save_history(history):
     with open(HISTORY_DIR, 'w') as f:
         json.dump(history, f, indent=4)
 
-def groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_delay=0.5):
+def     groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_delay=0.5):
 
     convo = load_history()  
     
@@ -67,7 +67,7 @@ def groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_de
             )
 
             response = chat_completion.choices[0].message.content
-            response_text = response.translate(str.maketrans('', '', '**\*'))
+            response_text = response.translate(str.maketrans('', '', '**\\*'))
             convo.append({"role": "assistant", "content": response_text})
 
             if len(convo) > 20:  

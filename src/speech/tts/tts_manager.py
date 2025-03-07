@@ -1,13 +1,12 @@
 import io
-import asyncio
-from asyncio import Queue, Semaphore, create_task, gather, to_thread
+from asyncio import Queue, Semaphore, Lock, Event, create_task, gather, to_thread
 from typing import List, Tuple, Dict
 import sounddevice as sd
 import soundfile as sf
-from tts.engines import edge, speechify
+from src.speech.tts.engines import edge, speechify
 from blingfire import text_to_sentences
-from tts.voices import VOICES
-from common.logger import setup_logging
+from src.speech.tts.voices import VOICES
+from src.utils.logger import setup_logging
 import numpy as np
 
 logger = setup_logging()
@@ -21,9 +20,9 @@ class TTSManager:
         self.audio_queue = Queue(maxsize=audio_queue_maxsize)
         self.semaphore = Semaphore(max_concurrent_tasks)
         self.next_index_to_play = 0
-        self.playback_lock = asyncio.Lock()  # Ensure one playback at a time
+        self.playback_lock = Lock()  # Ensure one playback at a time
         self.buffer: Dict[int, Tuple[np.ndarray, int]] = {}  # Buffer to store preloaded audio (data, samplerate)
-        self.playback_event = asyncio.Event()  # Event to signal playback task
+        self.playback_event = Event()  # Event to signal playback task
 
     async def play_audio_async(self, audio_data: np.ndarray, samplerate: int) -> None:
         try:

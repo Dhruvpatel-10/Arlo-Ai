@@ -1,5 +1,5 @@
-from func.function_define import *
-from src.common.logger import setup_logging
+from src.actions.function_define import *
+from src.utils.logger import setup_logging
 
 logger = setup_logging()
 

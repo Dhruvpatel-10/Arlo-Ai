@@ -2,8 +2,8 @@ import aiohttp
 import asyncio
 import base64
 from typing import Optional
-from src.tts.engines.base_tts import TTSEngine
-from src.common.logger import setup_logging
+from src.speech.tts.engines.base_tts import TTSEngine
+from src.utils.logger import setup_logging
 
 logger = setup_logging()
 

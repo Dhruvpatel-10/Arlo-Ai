@@ -120,6 +120,7 @@
         "take a screenshot and tell me what you see?": "take_screenshot",
         "search for ms dhoni on google": "open_browser",
         "hello": "None",
-        "hey what's up": "None"
+        "hey what's up": "None",
+        "hey what's buddy": "None"
     }
 }

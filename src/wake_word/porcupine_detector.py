@@ -4,32 +4,33 @@ import numpy as np
 import os
 import platform
 import asyncio
-from typing import List, Optional, Callable
+from typing import List, Optional
 from threading import Lock
+from src.core.event_bus import EventBus, EventPriority
+from src.core.state import StateManager, AssistantState
 from src.utils.logger import setup_logging
 from src.wake_word.wake_manager import WakeWordCommand
 from src.utils.config import WAKE_WORD_DIR
-from src.core.error import AccessKeyError
+from src.core.error import AccessKeyError, WakeWordError
 
 class WakeWordDetector:
     def __init__(self, 
                  sensitivity: float = 0.5, 
                  buffer_size: int = 1024,
-                 callback: Optional[Callable[[str], None]] = None):
+                 eventbus: Optional[EventBus] = None,
+                 state_manager: Optional[StateManager] = None):
         """
         Initialize wake word detector with Porcupine
         
         Args:
-            access_key (str): Picovoice access key
             sensitivity (float): Detection sensitivity (0-1)
             buffer_size (int): Audio buffer size for processing
-            callback (Optional[Callable]): Callback function when wake word is detected
+            evenbus (EventBus): Event bus for system-wide communication
+            state_manager (StateManager): State manager for tracking assistant state
         """
-        
         self.sensitivity = sensitivity
         self.buffer_size = buffer_size
-        self.callback = callback
-        self.keyword_paths = self._load_model()
+        self.keyword_paths = self.load_model()
         
         self.porcupine = None
         self.audio_stream = None
@@ -46,7 +47,10 @@ class WakeWordDetector:
             2: WakeWordCommand.PAUSE,
             3: WakeWordCommand.CONTINUE
         }
-        self.logger = setup_logging()
+        self.logger = None
+        self.eventbus = eventbus
+        self.state_manager = state_manager
+
         ACCESS_KEY = os.getenv("PICOV_ACCESS_KEY")
         if not ACCESS_KEY:
             raise AccessKeyError("PICOV_ACCESS_KEY is not set")
@@ -67,8 +71,8 @@ class WakeWordDetector:
         except AccessKeyError as e:
             print("AccessKeyError:", e)
             raise
-       
-    def _load_model(self) -> List[str]:
+
+    def load_model(self) -> List[str]:
         """Load wake word model paths based on OS"""
         OS = platform.system().lower()
         return [
@@ -77,6 +81,12 @@ class WakeWordDetector:
             str(WAKE_WORD_DIR / f"{OS}/Arlo-pause_en_{OS}_v3_0_0.ppn"),
             str(WAKE_WORD_DIR / f"{OS}/Arlo-continue_en_{OS}_v3_0_0.ppn")
         ]
+    
+    async def wake_word_detected(self, command: str):
+        """Handle wake word detection by publishing to event bus"""
+        await self.eventbus.publish("wake_word_detected", command)
+        self.is_running = False
+
     async def process_audio_chunk(self, chunk) -> bool:
         """Process a single audio chunk"""
         if len(chunk) == self.porcupine.frame_length:
@@ -85,13 +95,13 @@ class WakeWordDetector:
                 
                 if keyword_index >= 0:
                     command = self.keyword_map.get(keyword_index)
-                    if command and self.callback:
+                    if command:
                         self.logger.info(f"Detected wake word command: {command.value}")
                         # Handle both async and non-async callbacks
-                        if asyncio.iscoroutinefunction(self.callback):
-                            await self.callback(command.value)
+                        if asyncio.iscoroutinefunction(self.wake_word_detected):
+                            await self.wake_word_detected(command.value)
                         else:
-                            self.callback(command.value)
+                            self.wake_word_detected(command.value)
                     return True
         return False
 
@@ -107,6 +117,16 @@ class WakeWordDetector:
             detected = await self.process_audio_chunk(chunk)
             if detected:
                 return
+            
+    async def _start_wake_word_detection(self):
+        """Start wake word detection"""
+        try:
+            if await self.state_manager.get_state() == AssistantState.IDLE and not self.is_running:
+                await self.start_detection()
+        except WakeWordError as e:
+            raise
+        except Exception as e:
+            self.logger.error(f"Error starting wake word detection: {e}")
 
     async def start_detection(self):
         """Start real-time audio detection asynchronously"""
@@ -127,19 +147,14 @@ class WakeWordDetector:
             
             with self.audio_stream:
                 while self.is_running:
-                    try:
-                        indata, _ = self.audio_stream.read(self.buffer_size)
-                        await self.audio_callback(indata, self.buffer_size, None, None)
-                        await asyncio.sleep(0.01)  # Small sleep to prevent CPU hogging
-                    except KeyboardInterrupt:
-                        print("Exiting...")
+                    indata, _ = self.audio_stream.read(self.buffer_size)
+                    await self.audio_callback(indata, self.buffer_size, None, None)
+                    await asyncio.sleep(0.01)
         except Exception as e:
             self.logger.error(f"Error in wake word detection: {str(e)}")
             await self.cleanup()
-
-    async def stop_detection(self):
-        """Stop the detection process"""
-        await self.restart_detection()
+        finally:
+            await self.restart_detection()
 
     async def restart_detection(self):
         """Restart the detection process"""
@@ -157,6 +172,15 @@ class WakeWordDetector:
             self.porcupine = None
     
     async def __aenter__(self):
+    # Offload heavy blocking initialization to a thread
+        """Async context manager entry to initialize Porcupine in a non-blocking manner."""
+        self.logger = setup_logging()
+        import time
+        start_time = time.time()
+         # Your initialization logic here
+        await asyncio.to_thread(self._initialize_porcupine)
+        self.eventbus.subscribe("start_wake_word_detection", self._start_wake_word_detection, priority=EventPriority.HIGH, async_handler=True)
+        self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

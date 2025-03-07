@@ -1,11 +1,11 @@
 # main.py
 import aioconsole
 from src.llm.model import groq_prompt
-from func.cmdpharser import process_command
-from func.function_registry import FunctionRegistryAndCaller
+from src.actions.cmdpharser import process_command
+from src.actions.function_registry import FunctionRegistryAndCaller
 from src.url.url_parser import SearchQueryFinder
-from src.tts.tts_manager import TTSManager
-from src.common.logger import setup_logging, delete_af
+from src.speech.tts.tts_manager import TTSManager
+from src.utils.logger import setup_logging, delete_af
 
 async def main():
     logger = setup_logging()

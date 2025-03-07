@@ -5,8 +5,8 @@ from PIL import Image
 import base64 
 from groq import Groq
 import subprocess
-from common.config import IMAGES_DIR, VISION_LLM_MODEL
-from common.logger import setup_logging
+from src.utils.config import IMAGES_DIR, VISION_LLM_MODEL
+from src.utils.logger import setup_logging
 import webbrowser
 
 

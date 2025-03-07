@@ -4,8 +4,8 @@ import os
 import json
 import aiofiles
 from typing import Dict, Any, List, Tuple
-from common.config import FUNC_CACHE_DIR, FUNC_LLM_MODEL
-from common.logger import setup_logging
+from src.utils.logger import setup_logging
+from src.utils.config import FUNC_CACHE_DIR, FUNC_LLM_MODEL
 from groq import AsyncGroq
 
 groq_api = os.getenv("GROQ_FUNC_CALL_API")

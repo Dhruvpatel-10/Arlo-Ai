@@ -1,9 +1,9 @@
 import os
 import asyncio
 from typing import Optional
-from tts.engines.base_tts import TTSEngine
-from src.common.logger import setup_logging
-from src.common.config import AUDIO_DIR
+from src.speech.tts.engines.base_tts import TTSEngine
+from src.utils.logger import setup_logging
+from src.utils.config import AUDIO_DIR
 import aiofiles
 
 logger = setup_logging()
