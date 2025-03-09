@@ -2,6 +2,7 @@ import pvporcupine
 import sounddevice as sd
 import numpy as np
 import os
+import time
 import platform
 import asyncio
 from typing import List, Optional
@@ -17,7 +18,7 @@ class WakeWordDetector:
     def __init__(self, 
                  sensitivity: float = 0.5, 
                  buffer_size: int = 1024,
-                 eventbus: Optional[EventBus] = None,
+                 event_bus: Optional[EventBus] = None,
                  state_manager: Optional[StateManager] = None):
         """
         Initialize wake word detector with Porcupine
@@ -25,7 +26,7 @@ class WakeWordDetector:
         Args:
             sensitivity (float): Detection sensitivity (0-1)
             buffer_size (int): Audio buffer size for processing
-            evenbus (EventBus): Event bus for system-wide communication
+            even_bus (EventBus): Event bus for system-wide communication
             state_manager (StateManager): State manager for tracking assistant state
         """
         self.sensitivity = sensitivity
@@ -34,7 +35,7 @@ class WakeWordDetector:
         
         self.porcupine = None
         self.audio_stream = None
-        self.is_running = False
+        self.is_running = True
         self.detection_lock = Lock()
         
         # Pre-allocate numpy arrays for better performance
@@ -48,7 +49,7 @@ class WakeWordDetector:
             3: WakeWordCommand.CONTINUE
         }
         self.logger = None
-        self.eventbus = eventbus
+        self.eventbus = event_bus
         self.state_manager = state_manager
 
         ACCESS_KEY = os.getenv("PICOV_ACCESS_KEY")
@@ -56,9 +57,37 @@ class WakeWordDetector:
             raise AccessKeyError("PICOV_ACCESS_KEY is not set")
         self.access_key = ACCESS_KEY
         # Initialize Porcupine
-        self._initialize_porcupine()
 
-    def _initialize_porcupine(self):
+
+    async def initialize(self):
+        """Async context manager entry to initialize Porcupine in a non-blocking manner."""
+        self.logger = setup_logging()
+        start_time = time.time()
+         # Your initialization logic here
+        await self._initialize_porcupine()
+        self.eventbus.subscribe(
+            "wakeword.start_detection",
+            self._start_wake_word_detection, 
+            priority=EventPriority.HIGH, 
+            async_handler=True)
+
+        self.eventbus.subscribe(
+            "wakeword.stop_detection",
+            self._stop_detection,
+            priority=EventPriority.HIGH,
+            async_handler=True)
+        self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
+
+    async def shutdown(self):
+        """Async context manager exit to shutdown Porcupine in a non-blocking manner."""
+        self.logger = setup_logging()
+        start_time = time.time()
+        # Your shutdown logic here
+        await self.cleanup()
+        self.porcupine.delete()
+        self.logger.debug(f"Shutdown took {time.time() - start_time:.2f} seconds")
+
+    async def _initialize_porcupine(self):
         """Initialize or reinitialize the Porcupine instance"""
         if self.porcupine is not None:
             self.porcupine.delete()
@@ -84,8 +113,8 @@ class WakeWordDetector:
     
     async def wake_word_detected(self, command: str):
         """Handle wake word detection by publishing to event bus"""
-        await self.eventbus.publish("wake_word_detected", command)
-        self.is_running = False
+        await self.eventbus.publish("wakeword.detected", command)
+        return command
 
     async def process_audio_chunk(self, chunk) -> bool:
         """Process a single audio chunk"""
@@ -96,12 +125,21 @@ class WakeWordDetector:
                 if keyword_index >= 0:
                     command = self.keyword_map.get(keyword_index)
                     if command:
-                        self.logger.info(f"Detected wake word command: {command.value}")
                         # Handle both async and non-async callbacks
                         if asyncio.iscoroutinefunction(self.wake_word_detected):
                             await self.wake_word_detected(command.value)
                         else:
                             self.wake_word_detected(command.value)
+                    
+                    c_state = await self.state_manager.get_state()
+                        # Only stop detection for WAKE command
+                    if (command == WakeWordCommand.WAKE and c_state == AssistantState.IDLE) or \
+                    (command == WakeWordCommand.STOP and c_state in [AssistantState.SPEAKING, AssistantState.PAUSED]):
+
+                        self.is_running = False
+                        if self.audio_stream:
+                            self.audio_stream.stop()
+                        return True
                     return True
         return False
 
@@ -114,14 +152,13 @@ class WakeWordDetector:
         
         for i in range(0, frames, self.porcupine.frame_length):
             chunk = self.audio_buffer[i:i + self.porcupine.frame_length]
-            detected = await self.process_audio_chunk(chunk)
-            if detected:
-                return
+            await self.process_audio_chunk(chunk)
+
             
     async def _start_wake_word_detection(self):
         """Start wake word detection"""
         try:
-            if await self.state_manager.get_state() == AssistantState.IDLE and not self.is_running:
+            if self.is_running:
                 await self.start_detection()
         except WakeWordError as e:
             raise
@@ -136,7 +173,6 @@ class WakeWordDetector:
                 self._initialize_porcupine()
                 
             self.is_running = True
-
             self.audio_stream = sd.InputStream(
                 channels=1,
                 samplerate=self.porcupine.sample_rate,
@@ -153,8 +189,11 @@ class WakeWordDetector:
         except Exception as e:
             self.logger.error(f"Error in wake word detection: {str(e)}")
             await self.cleanup()
-        finally:
-            await self.restart_detection()
+
+
+    async def _stop_detection(self):
+        """Stop wake word detection"""
+        self.is_running = False
 
     async def restart_detection(self):
         """Restart the detection process"""
@@ -170,18 +209,3 @@ class WakeWordDetector:
         if hasattr(self, 'porcupine') and self.porcupine is not None:
             self.porcupine.delete()
             self.porcupine = None
-    
-    async def __aenter__(self):
-    # Offload heavy blocking initialization to a thread
-        """Async context manager entry to initialize Porcupine in a non-blocking manner."""
-        self.logger = setup_logging()
-        import time
-        start_time = time.time()
-         # Your initialization logic here
-        await asyncio.to_thread(self._initialize_porcupine)
-        self.eventbus.subscribe("start_wake_word_detection", self._start_wake_word_detection, priority=EventPriority.HIGH, async_handler=True)
-        self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.cleanup()

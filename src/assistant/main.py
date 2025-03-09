@@ -3,21 +3,38 @@ import aioconsole
 from src.llm.model import groq_prompt
 from src.actions.cmdpharser import process_command
 from src.actions.function_registry import FunctionRegistryAndCaller
+from src.core.event_bus import EventBus, EventPriority
+from src.core.state import StateManager
+from src.audio.central_manager import CentralAudioManager
 from src.url.url_parser import SearchQueryFinder
 from src.speech.tts.tts_manager import TTSManager
 from src.utils.logger import setup_logging, delete_af
 
+
+transcritoption = None
+
+async def get_transcrition(transcript):
+    global transcritoption
+    transcritoption = transcript
+
 async def main():
     logger = setup_logging()
     logger.info("Initializing assistant...")
+    event_bus = EventBus()
+    state_manager = StateManager()
+    central_manager = await CentralAudioManager.create(event_bus, state_manager)
     function_caller = await FunctionRegistryAndCaller.create()
     search_query = SearchQueryFinder()
     tts_manager = TTSManager()
+    event_bus.subscribe("transcription_complete", get_transcrition, priority=EventPriority.HIGH, async_handler=True)
+    
 
     async def user_input_loop():
         while True:
             try:
-                user_prompt = await aioconsole.ainput("\nUSER: ")
+                await event_bus.publish("start.wakeword.detection")
+                await event_bus.publish("start.audio.recording")
+                user_prompt = transcritoption
             except (EOFError, KeyboardInterrupt):
                 logger.info("User triggered exit.")
                 break
@@ -58,7 +75,8 @@ async def main():
     finally:
         delete_af()
         await tts_manager.close_all_engines()
-        
+        await central_manager.shutdown()
+
         # Initiate shutdown
         logger.info("Initiating shutdown sequence.")
         logger.info("Assistant terminated. Goodbye!")

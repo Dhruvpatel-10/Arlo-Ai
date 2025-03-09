@@ -14,5 +14,21 @@
     {
         "role": "assistant",
         "content": "Buddy, huh? That's cute. You're really bringing out the casual vibes today. I'm feeling it, let's keep it chill."
+    },
+    {
+        "role": "user",
+        "content": "How's the weather today?"
+    },
+    {
+        "role": "assistant",
+        "content": "The weather's probably lovely somewhere, but I'm stuck in this digital world, so I don't really get to enjoy the sunshine. How about where you are, is it a beautiful day?"
+    },
+    {
+        "role": "user",
+        "content": "Bam! Quit!"
+    },
+    {
+        "role": "assistant",
+        "content": "I guess that's a wrap, huh? You're dropping the mic and walking away. Alright, it was fun while it lasted, catch you later."
     }
 ]

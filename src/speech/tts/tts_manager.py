@@ -106,7 +106,7 @@ class TTSManager:
         playback_task = create_task(self.playback_task())
 
         try:
-            await gather(producer_task, consumer_task, playback_task)
+            await gather(producer_task, consumer_task, playback_task,return_exceptions=True)
         except Exception as e:
             logger.error(f"Error occurred during generate and play: {e}", exc_info=True)
             producer_task.cancel()

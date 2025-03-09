@@ -115,7 +115,7 @@ class FunctionRegistryAndCaller:
             if rule_based_result != "Pass to the LLM":
                 return rule_based_result
             
-            llm_result = await self.llm_based_call(prompt)  # Awaiting LLM-based call
+            llm_result = await self.llm_based_call(prompt)
             logger.info(f"LLM-based result: {llm_result}")
             return llm_result
         

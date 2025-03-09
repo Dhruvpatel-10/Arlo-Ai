@@ -1,11 +1,12 @@
 # core/event_bus.py
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, Optional
 from dataclasses import dataclass, field
 from threading import Lock
 import asyncio
 from enum import Enum, auto
 from src.utils.logger import setup_logging
-from src.core.error import AssistantError, EventBusError
+from collections import defaultdict
+import time
 
 class EventPriority(Enum):
     LOW = auto()
@@ -17,113 +18,197 @@ class Subscriber:
     callback: Callable
     priority: EventPriority = EventPriority.MEDIUM
     async_handler: bool = False
+    last_called: float = field(default_factory=lambda: 0.0)
+    call_count: int = 0
 
 @dataclass
 class Topic:
     name: str
-    subscribers: List[Subscriber] = field(default_factory=list)
+    subscribers: Dict[int, Subscriber] = field(default_factory=dict)
+    subscriber_order: List[int] = field(default_factory=list)
+    last_published: float = field(default_factory=lambda: 0.0)
+    
+    def __post_init__(self):
+        self._lock = Lock()  # Per-topic lock for better granularity
 
 class EventBus:
     def __init__(self):
         self._topics: Dict[str, Topic] = {}
         self._lock = Lock()
         self.logger = None
+        self._topic_stats: Dict[str, Dict] = defaultdict(lambda: {'publish_count': 0, 'last_publish': 0})
+        self._cleanup_threshold = 1000  # Number of empty topic checks before cleanup
+        self._empty_topic_count = 0
     
+    async def initialize(self) -> None:
+        """
+        Asynchronously initialize the event bus.
+        This method should be called before using the event bus.
+        """
+        self.logger = setup_logging()
+        if self.logger:
+            self.logger.debug("Event bus initialized")
+    
+    async def shutdown(self) -> None:
+        """
+        Cleanup and shutdown the event bus.
+        This method should be called when the event bus is no longer needed.
+        """
+        self._cleanup_empty_topics()
+        self._topics.clear()
+        if self.logger:
+            self.logger.debug("Event bus shut down")
+
     def subscribe(self, topic_name: str, callback: Callable, 
-                 priority: EventPriority = EventPriority.MEDIUM,
-                 async_handler: bool = False) -> None:
-        """
-        Subscribe to a topic with a callback function.
-        
-        Args:
-            topic_name: Name of the topic to subscribe to
-            callback: Function to be called when an event is published
-            priority: Priority level of the subscriber
-            async_handler: Whether the callback is an async function
-        """
+             priority: EventPriority = EventPriority.MEDIUM,
+             async_handler: bool = False) -> None:
         with self._lock:
             if topic_name not in self._topics:
                 self._topics[topic_name] = Topic(topic_name)
             
-            subscriber = Subscriber(callback, priority, async_handler)
             topic = self._topics[topic_name]
             
-            # Insert subscriber based on priority
-            for i, existing in enumerate(topic.subscribers):
-                if existing.priority.value < priority.value:
-                    topic.subscribers.insert(i, subscriber)
-                    break
-            else:
-                topic.subscribers.append(subscriber)
+        # Use topic-specific lock for better concurrency
+        with topic._lock:
+            callback_id = id(callback)
+            subscriber = Subscriber(callback, priority, async_handler)
             
-            self.logger.debug(f"Subscribed to topic '{topic_name}' with priority {priority.name}")
+            # Store the subscriber
+            topic.subscribers[callback_id] = subscriber
+            
+            # Optimized priority-based insertion
+            self._insert_subscriber_ordered(topic, callback_id, priority)
+            
+            if self.logger:
+                self.logger.debug(f"Subscribed to topic '{topic_name}' with priority {priority.name}")
+
+    def _insert_subscriber_ordered(self, topic: Topic, callback_id: int, priority: EventPriority) -> None:
+        """Optimized binary search insertion based on priority."""
+        if not topic.subscriber_order:
+            topic.subscriber_order.append(callback_id)
+            return
+
+        # binary search insertion
+        left, right = 0, len(topic.subscriber_order)
+        while left < right:
+            mid = (left + right) // 2
+            mid_id = topic.subscriber_order[mid]
+            mid_priority = topic.subscribers[mid_id].priority.value
+            
+            if mid_priority < priority.value:
+                right = mid
+            else:
+                left = mid + 1
+                
+        topic.subscriber_order.insert(left, callback_id)
 
     def unsubscribe(self, topic_name: str, callback: Callable) -> None:
-        """
-        Unsubscribe a callback from a topic.
-        
-        Args:
-            topic_name: Name of the topic to unsubscribe from
-            callback: Function to unsubscribe
-        """
-        with self._lock:
-            if topic_name in self._topics:
-                topic = self._topics[topic_name]
-                topic.subscribers = [s for s in topic.subscribers if s.callback != callback]
-                self.logger.debug(f"Unsubscribed from topic '{topic_name}'")
-
-    async def publish(self, topic_name: str, *args, **kwargs) -> None:
         with self._lock:
             if topic_name not in self._topics:
-                raise EventBusError(f"No subscribers for topic '{topic_name}'") 
+                return
+            
+            topic = self._topics[topic_name]
+            
+        with topic._lock:
+            callback_id = id(callback)
+            
+            if callback_id in topic.subscribers:
+                del topic.subscribers[callback_id]
+                if callback_id in topic.subscriber_order:
+                    topic.subscriber_order.remove(callback_id)
+                
+                # Check if topic is empty and mark for potential cleanup
+                if not topic.subscribers:
+                    self._empty_topic_count += 1
+                    if self._empty_topic_count >= self._cleanup_threshold:
+                        self._cleanup_empty_topics()
+                
+                if self.logger:
+                    self.logger.debug(f"Unsubscribed from topic '{topic_name}'")
 
-            subscribers = list(self._topics[topic_name].subscribers)
+    def _cleanup_empty_topics(self) -> None:
+        """Remove topics with no subscribers to prevent memory leaks."""
+        with self._lock:
+            empty_topics = [name for name, topic in self._topics.items() 
+                          if not topic.subscribers]
+            for topic_name in empty_topics:
+                del self._topics[topic_name]
+                if self.logger:
+                    self.logger.debug(f"Cleaned up empty topic '{topic_name}'")
+            self._empty_topic_count = 0
 
+    async def publish(self, topic_name: str, *args, **kwargs) -> List[Exception]:
+        """
+        Publish an event to a topic with optimized concurrent execution.
+        """
+        current_time = time.time()
+        
+        # Fast path for non-existent topics
+        if topic_name not in self._topics:
+            if self.logger:
+                self.logger.warning(f"No subscribers for topic '{topic_name}'")
+            return []
+
+        topic = self._topics[topic_name]
+        
+        # Get subscribers with topic-specific lock
+        with topic._lock:
+            if not topic.subscribers:
+                return []
+            
+            # Update topic statistics
+            topic.last_published = current_time
+            self._topic_stats[topic_name]['publish_count'] += 1
+            self._topic_stats[topic_name]['last_publish'] = current_time
+            
+            # Create a snapshot of current subscribers
+            subscribers = [topic.subscribers[sub_id] for sub_id in topic.subscriber_order]
+
+        # Process subscribers concurrently with optimized task creation
+        tasks = []
         for subscriber in subscribers:
-            try:
-                if subscriber.async_handler:
-                    await subscriber.callback(*args, **kwargs)
-                else:
-                    await asyncio.get_event_loop().run_in_executor(
-                        None, subscriber.callback, *args, **kwargs
-                    )
-            except AssistantError as e:
-                raise EventBusError(f"Error in subscriber for topic '{topic_name}'", e) 
-            except Exception as e:
-                raise EventBusError("Unexpected error in EventBus", e) 
+            subscriber.last_called = current_time
+            subscriber.call_count += 1
+            
+            if subscriber.async_handler:
+                tasks.append(self._execute_async_handler(subscriber, topic_name, *args, **kwargs))
+            else:
+                tasks.append(self._execute_sync_handler(subscriber, topic_name, *args, **kwargs))
 
-    async def __aenter__(self):
-        """Async context manager entry."""
-        self.logger = setup_logging()
-        import time
-        start_time = time.time()
-        # Your initialization logic here
-        self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
-        return self
+        # Optimized gathering of results
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Efficient exception handling
+        exceptions = [e for e in results if isinstance(e, Exception)]
+        
+        if exceptions and self.logger:
+            self.logger.error(f"{len(exceptions)} errors occurred while publishing to '{topic_name}'")
+            for exception in exceptions:
+                self.logger.error(f"Error in subscriber for topic '{topic_name}': {str(exception)}")
+        
+        return exceptions
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit."""
-        pass
+    async def _execute_async_handler(self, subscriber: Subscriber, topic_name: str, *args, **kwargs):
+        try:
+            return await subscriber.callback(*args, **kwargs)
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error in async subscriber for topic '{topic_name}': {str(e)}")
+            return e
 
-# Example usage:
-async def example_usage():
-    # Create event bus
-    event_bus = EventBus()
-    
-    # Define some handlers
-    async def async_handler(message: str):
-        print(f"Async handler received: {message}")
-    
-    def sync_handler(message: str):
-        print(f"Sync handler received: {message}")
-    
-    # Subscribe to topics
-    event_bus.subscribe("audio", async_handler, 
-                       priority=EventPriority.HIGH, 
-                       async_handler=True)
-    event_bus.subscribe("command", sync_handler, 
-                       priority=EventPriority.MEDIUM)
-    await event_bus.publish("audio", "Audio data received")
+    async def _execute_sync_handler(self, subscriber: Subscriber, topic_name: str, *args, **kwargs):
+        try:
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(
+                None, lambda: subscriber.callback(*args, **kwargs)
+            )
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error in sync subscriber for topic '{topic_name}': {str(e)}")
+            return e
 
-if __name__ == "__main__":
-    asyncio.run(example_usage())
+    def get_topic_stats(self, topic_name: Optional[str] = None) -> Dict:
+        """Get statistics for a specific topic or all topics."""
+        if topic_name:
+            return self._topic_stats.get(topic_name, {})
+        return dict(self._topic_stats)

@@ -24,18 +24,18 @@ class WakeWordManager():
             WakeWordCommand.PAUSE: self._handle_pause,
             WakeWordCommand.CONTINUE: self._handle_continue
         }
-        
+
         # Subscribe to wake word detection events
         self.event_bus.subscribe(
-            "wake_word_detected",
+            "wakeword.detected",
             self._on_wake_word_detected,
             priority=EventPriority.HIGH,
             async_handler=True
         )
-        
+
         # Subscribe to TTS completion events to update state
         self.event_bus.subscribe(
-            "tts_completed",
+            "tts.completed",
             self._on_tts_completed,
             priority=EventPriority.MEDIUM,
             async_handler=True
@@ -50,31 +50,36 @@ class WakeWordManager():
             if not wake_command:
                 self.logger.warning(f"Invalid wake word command received: {command}")
                 return
-            
+
             # Get current state before handling command
             current_state = await self.state_manager.get_state()
-            self.logger.info(f"Wake word '{command}' detected while in state: {current_state}")
+            self.logger.info(f"Wake word '{wake_command}' detected while in state: {current_state}")
             
             # Only process the command if it's valid for the current state
             if self._is_command_valid_for_state(wake_command, current_state):
+
                 handler = self.command_handlers.get(wake_command)
+                if (wake_command == WakeWordCommand.WAKE and current_state in [AssistantState.IDLE, AssistantState.PAUSED]) or \
+                (wake_command == WakeWordCommand.STOP and current_state in [AssistantState.SPEAKING, AssistantState.PAUSED]):
+                    await self.event_bus.publish("wakeword.stop_detection")
+                    self.logger.debug("WAKE WORD Detection is stopped....")
                 await handler()
             else:
-                self.logger.info(f"Ignoring '{command}' command in current state: {current_state}")
-                
+                self.logger.info(f"Ignoring '{command}' command, not applicable in current state: {current_state}")
+
         except Exception as e:
             self.logger.error(f"Error handling wake word command: {e}")
-    
+
     def _is_command_valid_for_state(self, command: WakeWordCommand, state: AssistantState) -> bool:
         """Check if a wake word command is valid for the current state"""
         # State-specific command validation
         if command == WakeWordCommand.WAKE:
             # Hey Arlo is only valid when IDLE or PAUSED
-            return state in [AssistantState.IDLE, AssistantState.PAUSED]
+            return state == AssistantState.IDLE
         
         elif command == WakeWordCommand.STOP:
             # Stop is valid in any active state
-            return state not in [AssistantState.IDLE]
+            return state in [AssistantState.SPEAKING, AssistantState.PAUSED]
         
         elif command == WakeWordCommand.PAUSE:
             # Pause is only valid when actively speaking
@@ -83,40 +88,41 @@ class WakeWordManager():
         elif command == WakeWordCommand.CONTINUE:
             # Continue is only valid when paused
             return state == AssistantState.PAUSED
-        
+
         return False
-                
+
     async def _handle_wake(self) -> None:
         """Handle 'Hey Arlo' command"""
         current_state = await self.state_manager.get_state()
         if current_state in [AssistantState.IDLE, AssistantState.PAUSED]:
             await self.state_manager.set_state(AssistantState.LISTENING)
-            await self.event_bus.publish("hey_arlo_detected")
             self.logger.info("Activated assistant with 'Hey Arlo'")
 
     async def _handle_stop(self) -> None:
         """Handle 'Stop Arlo' command"""
         current_state = await self.state_manager.get_state()
-        if current_state != AssistantState.IDLE:
+        if current_state in [AssistantState.SPEAKING, AssistantState.PAUSED]:
             await self.state_manager.set_state(AssistantState.IDLE)
-            await self.event_bus.publish("stop_arlo_detected")
-            self.logger.info("Stopped assistant with 'Stop Arlo'")
+            # await self.event_bus.publish("s")
+            self.logger.info("Speaking stopped and back to IDLE state with 'Stop Arlo'")
+            # Restart wake word detection since we're back to IDLE
+            await self.event_bus.publish("wakeword.start_detection")
 
     async def _handle_pause(self) -> None:
         """Handle 'Arlo Pause' command"""
         current_state = await self.state_manager.get_state()
         if current_state == AssistantState.SPEAKING:
             await self.state_manager.set_state(AssistantState.PAUSED)
-            await self.event_bus.publish("arlo_pause_detected")
-            self.logger.info("Paused assistant with 'Arlo Pause'")
+            # await self.event_bus.publish("arlo_pause_detected")
+            self.logger.info("Speaking paused with 'Arlo Pause'")
 
     async def _handle_continue(self) -> None:
         """Handle 'Arlo Continue' command"""
         current_state = await self.state_manager.get_state()
         if current_state == AssistantState.PAUSED:
             await self.state_manager.set_state(AssistantState.SPEAKING)
-            await self.event_bus.publish("arlo_continue_detected")
-            self.logger.info("Continued assistant with 'Arlo Continue'")
+            # await self.event_bus.publish("arlo_continue_detected")
+            self.logger.info("Speaking continued with 'Arlo Continue'")
     
     async def _on_tts_completed(self) -> None:
         """Handle TTS completion by transitioning back to IDLE state"""

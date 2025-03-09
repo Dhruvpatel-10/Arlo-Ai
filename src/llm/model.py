@@ -42,7 +42,7 @@ def save_history(history):
     with open(HISTORY_DIR, 'w') as f:
         json.dump(history, f, indent=4)
 
-def     groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_delay=0.5):
+def groq_prompt(prompt, img_context, function_execution, max_retries=3, retry_delay=0.5):
 
     convo = load_history()  
     

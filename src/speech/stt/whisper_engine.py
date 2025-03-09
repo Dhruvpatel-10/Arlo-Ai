@@ -1,4 +1,5 @@
 from faster_whisper import WhisperModel
+import time 
 from typing import Union
 from pathlib import Path
 import numpy as np
@@ -19,7 +20,32 @@ class WhisperEngine:
         self.model_path = Path(model_path)
         self.model = None
         self.logger = None
-        self._thread_pool = ThreadPoolExecutor(max_workers=1)  # Single worker to prevent OOM
+        self._thread_pool = ThreadPoolExecutor(max_workers=1)
+
+    
+    async def initialize(self):
+        """Async initialization method."""
+        start_time = time.time()
+        self.logger = setup_logging()
+        # Your initialization logic here
+        self.model = await asyncio.to_thread(
+            lambda: WhisperModel(
+                "small.en",
+                download_root=self.model_path,
+                compute_type="int8"
+            )
+        )
+        self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
+
+    async def shutdown(self):  
+        """
+        Async shutdown method.
+        Cleanup resources on exit.
+        """
+        self.logger.info("Exiting Whisper engine...")
+        self._thread_pool.shutdown(wait=False)
+        del self.model
+        gc.collect()
 
     def normalize_audio(self, audio_data: np.ndarray) -> np.ndarray:
         """
@@ -95,28 +121,3 @@ class WhisperEngine:
             )
         )
         return " ".join(segment.text for segment in segments).strip()
-
-    async def __aenter__(self):
-        """Async context manager entry."""
-        self.logger = setup_logging()
-        import time 
-        start_time = time.time()
-        # Your initialization logic here
-        self.model = await asyncio.to_thread(
-            lambda: WhisperModel(
-                "small.en",
-                download_root=self.model_path,
-                compute_type="int8"
-            )
-        )
-        self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
-        return self
-    
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """
-        Cleanup resources on exit.
-        """
-        self.logger.info("Exiting Whisper engine...")
-        self._thread_pool.shutdown(wait=False)
-        del self.model
-        gc.collect()

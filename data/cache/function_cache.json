@@ -121,6 +121,8 @@
         "search for ms dhoni on google": "open_browser",
         "hello": "None",
         "hey what's up": "None",
-        "hey what's buddy": "None"
+        "hey what's buddy": "None",
+        "How's the weather today?": "None",
+        "Bam! Quit!": "None"
     }
 }

@@ -1,15 +1,21 @@
 import sounddevice as sd
 import numpy as np
 import asyncio
-from src.wake_word.vad import VADManager
+import time
 from typing import Optional, Dict, Any
+from src.wake_word.vad import VADManager
+from src.core.event_bus import EventBus, EventPriority
 from src.utils.logger import setup_logging
+from collections import deque
 
 
 class AudioRecorder:
-    """A self-contained async audio recording class with integrated VAD and pre-roll buffer."""
+    """
+    A self-contained async audio recording class with integrated VAD and pre-roll buffer. It subscribe to 'handle_recording' event.
+    """
     def __init__(
         self,
+        event_bus: Optional[EventBus] = None,
         sample_rate: int = 16000,
         channels: int = 1,
         dtype: np.dtype = np.int16,
@@ -19,6 +25,7 @@ class AudioRecorder:
         max_queue_size: int = 10  # Maximum number of utterances to keep in queue
     ):
         """Initialize the AudioRecorder with VADManager."""
+        self.event_bus = event_bus
         self.sample_rate = sample_rate
         self.channels = channels
         self.dtype = dtype
@@ -27,45 +34,46 @@ class AudioRecorder:
         self.max_queue_size = max_queue_size
         
         self.logger = None
-        
+        self.audio_fetch_event = asyncio.Event()
         self.is_recording = False  # Make this a public attribute
         self.audio_queue = asyncio.Queue(maxsize=max_queue_size)
         self.stream = None
         self.vad_manager = VADManager(pre_roll_duration=pre_roll_duration)
         
-        # Calculate pre-roll buffer size in samples
+        # Use deque for pre-roll buffer
         self.pre_roll_size = int(pre_roll_duration * sample_rate)
-        self.pre_roll_buffer = np.zeros(self.pre_roll_size, dtype=self.dtype)
-        self.pre_roll_index = 0
+        self.pre_roll_buffer = deque(maxlen=self.pre_roll_size)
         
-        # Use numpy array for audio buffer with pre-allocated size
-        self.max_audio_buffer_size = int(sample_rate * 30)  # Max 30 seconds per utterance
-        self.audio_buffer = np.zeros(self.max_audio_buffer_size, dtype=self.dtype)
-        self.audio_buffer_index = 0
-        self.utterance_ready = False
+        # Use dynamic list for audio buffer
+        self.current_buffer = []
         
         self._lock = asyncio.Lock()
         self._processing_task = None
+
+
+    async def initialize(self):
+        start_time = time.time()
+        self.logger = setup_logging()
+        self.event_bus.subscribe(
+            "audio.record.request", 
+            self._handle_recording, 
+            priority=EventPriority.HIGH, 
+            async_handler=True
+        )
+        # Your initialization logic here
+        self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
+
+    async def shutdown(self):
+        if self.is_recording:
+            await self.stop_recording()
 
     async def _audio_callback(self, indata: np.ndarray) -> None:
         """Process audio data asynchronously."""
         async with self._lock:
             audio_data = indata.flatten()
             
-            # Update pre-roll buffer
-            samples_to_write = len(audio_data)
-            space_remaining = self.pre_roll_size - self.pre_roll_index
-            
-            if samples_to_write >= space_remaining:
-                self.pre_roll_buffer[:-samples_to_write] = self.pre_roll_buffer[samples_to_write:]
-                self.pre_roll_buffer[-samples_to_write:] = audio_data
-                self.pre_roll_index = self.pre_roll_size
-            else:
-                self.pre_roll_buffer[self.pre_roll_index:self.pre_roll_index + samples_to_write] = audio_data
-                self.pre_roll_index += samples_to_write
-                
-                if self.pre_roll_index >= self.pre_roll_size:
-                    self.pre_roll_index = 0
+            # Update pre-roll buffer using deque
+            self.pre_roll_buffer.extend(audio_data)
             
             frame_length = self.vad_manager.cobra.frame_length
             for i in range(0, len(audio_data), frame_length):
@@ -79,38 +87,32 @@ class AudioRecorder:
         if vad_state['speech_started']:
             self.logger.info("VAD: Speech detected, starting recording.")
             await self._cleanup_old_data()
-            self.audio_buffer_index = 0
             
-            # Copy pre-roll buffer
-            pre_roll_data = self.pre_roll_buffer.copy()
-            self.audio_buffer[:len(pre_roll_data)] = pre_roll_data
-            self.audio_buffer_index = len(pre_roll_data)
+            # Convert pre-roll buffer to numpy array and start new recording
+            self.current_buffer = list(self.pre_roll_buffer)
             self.is_recording = True
         
         if self.is_recording:
-            if self.audio_buffer_index + len(chunk) >= self.max_audio_buffer_size:
-                self.logger.warning("Audio buffer full, stopping recording")
-                self.is_recording = False
-                return
-            
-            self.audio_buffer[self.audio_buffer_index:self.audio_buffer_index + len(chunk)] = chunk
-            self.audio_buffer_index += len(chunk)
+            self.current_buffer.extend(chunk)
         
         if vad_state['speech_ended']:
             self.logger.info(f"VAD: Speech ended after {vad_state['speech_duration']}s")
             self.is_recording = False
-            final_audio = self.audio_buffer[:self.audio_buffer_index].copy()
             
-            try:
-                await self.audio_queue.put(final_audio)
-                self.utterance_ready = True
-            except asyncio.QueueFull:
-                self.logger.warning("Audio queue full, dropping oldest recording")
+            if self.current_buffer:
+                final_audio = np.array(self.current_buffer, dtype=self.dtype)
                 try:
-                    await self.audio_queue.get()
                     await self.audio_queue.put(final_audio)
-                except asyncio.QueueEmpty:
-                    pass
+                    self.audio_fetch_event.set()
+                except asyncio.QueueFull:
+                    self.logger.warning("Audio queue full, dropping oldest recording")
+                    try:
+                        await self.audio_queue.get()
+                        await self.audio_queue.put(final_audio)
+                    except asyncio.QueueEmpty:
+                        pass
+                finally:
+                    self.current_buffer = []
 
     async def _process_audio_stream(self):
         """Continuously process audio stream."""
@@ -121,17 +123,17 @@ class AudioRecorder:
                 await asyncio.sleep(0.001)  # Small sleep to prevent CPU hogging
             except Exception as e:
                 self.logger.error(f"Error processing audio stream: {e}")
+                await self.stop_recording()
                 break
-
+    
     async def start_recording(self):
         """Start recording with pre-roll buffer asynchronously."""
         if self.is_recording:
             return
-
+        self.audio_fetch_event.clear()
         self.logger.info("Waiting for speech...")
         self.is_recording = True
-        self.pre_roll_buffer.fill(0)
-        self.pre_roll_index = 0
+        self.pre_roll_buffer.clear()
         
         self.stream = sd.InputStream(
             samplerate=self.sample_rate,
@@ -166,21 +168,19 @@ class AudioRecorder:
             self.stream.close()
             self.stream = None
 
+    async def _handle_recording(self):
+        """Handle recording process."""   
+        await self.start_recording()
+        await self.audio_fetch_event.wait()
+        await self.stop_recording()
+            
     async def get_audio_data(self) -> Optional[np.ndarray]:
         """Retrieve recorded audio from the queue asynchronously."""
-        if self.utterance_ready and not self.audio_queue.empty():
-            self.utterance_ready = False
+        if self.audio_fetch_event.is_set() and not self.audio_queue.empty():
+            self.audio_fetch_event.clear()
             return await self.audio_queue.get()
         return None
-
-    async def clear_queue(self):
-        """Clear the audio queue asynchronously."""
-        while not self.audio_queue.empty():
-            try:
-                await self.audio_queue.get_nowait()
-            except asyncio.QueueEmpty:
-                break
-
+    
     async def _cleanup_old_data(self):
         """Clean up old data to prevent memory growth."""
         while self.audio_queue.qsize() > self.max_queue_size - 1:
@@ -188,17 +188,3 @@ class AudioRecorder:
                 await self.audio_queue.get_nowait()
             except asyncio.QueueEmpty:
                 break
-
-    async def __aenter__(self):
-        """Async context manager entry."""
-        self.logger = setup_logging()
-        import time
-        start_time = time.time()
-        # Your initialization logic here
-        self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit."""
-        if self.is_recording:
-            await self.stop_recording()
