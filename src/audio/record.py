@@ -1,3 +1,4 @@
+#record.py
 import sounddevice as sd
 import numpy as np
 import asyncio
@@ -7,7 +8,6 @@ from src.wake_word.vad import VADManager
 from src.core.event_bus import EventBus, EventPriority
 from src.utils.logger import setup_logging
 from collections import deque
-
 
 class AudioRecorder:
     """
@@ -97,22 +97,24 @@ class AudioRecorder:
         
         if vad_state['speech_ended']:
             self.logger.info(f"VAD: Speech ended after {vad_state['speech_duration']}s")
-            self.is_recording = False
+            # Don't set is_recording to False yet, just mark the utterance as complete
             
             if self.current_buffer:
                 final_audio = np.array(self.current_buffer, dtype=self.dtype)
                 try:
                     await self.audio_queue.put(final_audio)
                     self.audio_fetch_event.set()
+                    # Empty the current buffer but keep recording for next potential utterance
+                    self.current_buffer = []
                 except asyncio.QueueFull:
                     self.logger.warning("Audio queue full, dropping oldest recording")
                     try:
                         await self.audio_queue.get()
                         await self.audio_queue.put(final_audio)
+                        self.audio_fetch_event.set()
+                        self.current_buffer = []
                     except asyncio.QueueEmpty:
                         pass
-                finally:
-                    self.current_buffer = []
 
     async def _process_audio_stream(self):
         """Continuously process audio stream."""
@@ -152,9 +154,14 @@ class AudioRecorder:
         if not self.is_recording:
             return
         
-        await self.vad_manager.reset()
-
+        # First set the flag to stop processing
         self.is_recording = False
+        
+        # Wait for any pending audio callbacks to complete
+        async with self._lock:
+            await self.vad_manager.reset()
+        
+        # Cancel and wait for the processing task
         if self._processing_task:
             self._processing_task.cancel()
             try:
@@ -163,21 +170,27 @@ class AudioRecorder:
                 pass
             self._processing_task = None
         
+        # Finally close the stream
         if self.stream:
             self.stream.stop()
             self.stream.close()
             self.stream = None
+            
+        # Clear any remaining buffers
+        self.pre_roll_buffer.clear()
+        self.current_buffer = []
 
     async def _handle_recording(self):
         """Handle recording process."""   
         await self.start_recording()
-        await self.audio_fetch_event.wait()
-        await self.stop_recording()
             
     async def get_audio_data(self) -> Optional[np.ndarray]:
         """Retrieve recorded audio from the queue asynchronously."""
         if self.audio_fetch_event.is_set() and not self.audio_queue.empty():
             self.audio_fetch_event.clear()
+            # Ensure microphone is stopped if it's still active
+            if self.is_recording:
+                await self.stop_recording()
             return await self.audio_queue.get()
         return None
     
