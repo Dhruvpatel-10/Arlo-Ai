@@ -7,7 +7,7 @@ authors = [
 ]
 license = {text = "EULA"}
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<4.0"
 dependencies = [
     "aiohappyeyeballs (==2.4.4)",
     "aioconsole (==0.8.1)",
@@ -30,7 +30,6 @@ dependencies = [
     "pvcobra (==2.0.5)",
     "pydantic (==2.10.5)",
     "pyperclip (==1.9.0)",
-    "pydub (==0.25.1)",
     "pyscreenshot (==3.1)",
     "python-dotenv (==1.0.1)",
     "sounddevice (==0.5.1)",
@@ -41,7 +40,9 @@ dependencies = [
     "pvporcupine (>=3.0.5,<4.0.0)",
     "faster-whisper (>=1.1.1,<2.0.0)",
     "validators (>=0.34.0,<0.35.0)",
-    "email-validator (>=2.2.0,<3.0.0)"
+    "email-validator (>=2.2.0,<3.0.0)",
+    "pydub (>=0.25.1,<0.26.0)",
+    "langchain[groq] (>=0.3.20,<0.4.0)"
 ]
 
 
