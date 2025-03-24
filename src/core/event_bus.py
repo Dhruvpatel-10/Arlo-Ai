@@ -7,6 +7,7 @@ from enum import Enum, auto
 from src.utils.logger import setup_logging
 from collections import defaultdict
 import time
+from src.utils.helpers import GenericUtils
 
 class EventPriority(Enum):
     LOW = auto()
@@ -39,15 +40,8 @@ class EventBus:
         self._topic_stats: Dict[str, Dict] = defaultdict(lambda: {'publish_count': 0, 'last_publish': 0})
         self._cleanup_threshold = 1000  # Number of empty topic checks before cleanup
         self._empty_topic_count = 0
-    
-    async def initialize(self) -> None:
-        """
-        Asynchronously initialize the event bus.
-        This method should be called before using the event bus.
-        """
-        self.logger = setup_logging()
-        if self.logger:
-            self.logger.debug("Event bus initialized")
+        self.logger = setup_logging(module_name="Event_Bus")
+
     
     async def shutdown(self) -> None:
         """
@@ -58,6 +52,8 @@ class EventBus:
         self._topics.clear()
         if self.logger:
             self.logger.debug("Event bus shut down")
+
+
 
     def subscribe(self, topic_name: str, callback: Callable, 
              priority: EventPriority = EventPriority.MEDIUM,
@@ -79,8 +75,7 @@ class EventBus:
             # Optimized priority-based insertion
             self._insert_subscriber_ordered(topic, callback_id, priority)
             
-            if self.logger:
-                self.logger.debug(f"Subscribed to topic '{topic_name}' with priority {priority.name}")
+            self.logger.event(f"Subscribed to topic '{topic_name}' with priority {priority.name} and subscribed in {GenericUtils.caller_info()}")
 
     def _insert_subscriber_ordered(self, topic: Topic, callback_id: int, priority: EventPriority) -> None:
         """Optimized binary search insertion based on priority."""
@@ -142,7 +137,8 @@ class EventBus:
         Publish an event to a topic with optimized concurrent execution.
         """
         current_time = time.time()
-        
+        caller_info = GenericUtils.caller_info()
+        self.logger.event(f"EVENT Publish by {caller_info} and {topic_name}")
         # Fast path for non-existent topics
         if topic_name not in self._topics:
             if self.logger:
@@ -151,6 +147,7 @@ class EventBus:
 
         topic = self._topics[topic_name]
         
+        # self.logger.debug(f"Publishing to topic '{topic}' by {caller_info}")        
         # Get subscribers with topic-specific lock
         with topic._lock:
             if not topic.subscribers:

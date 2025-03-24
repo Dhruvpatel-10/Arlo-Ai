@@ -27,7 +27,7 @@ class WakeWordManager():
 
         # Subscribe to wake word detection events
         self.event_bus.subscribe(
-            "wakeword.detected",
+            "wakeword.detected.manager",
             self._on_wake_word_detected,
             priority=EventPriority.HIGH,
             async_handler=True
@@ -37,38 +37,9 @@ class WakeWordManager():
         self.event_bus.subscribe(
             "tts.completed",
             self._on_tts_completed,
-            priority=EventPriority.MEDIUM,
+            priority=EventPriority.HIGH,
             async_handler=True
         )
-
-    async def _on_wake_word_detected(self, command: str) -> None:
-        """Handle wake word detection events"""
-        try:
-            # Find the matching command enum
-            wake_command = next((cmd for cmd in WakeWordCommand if cmd.value == command), None)
-            self.command = wake_command
-            if not wake_command:
-                self.logger.warning(f"Invalid wake word command received: {command}")
-                return
-
-            # Get current state before handling command
-            current_state = await self.state_manager.get_state()
-            self.logger.info(f"Wake word '{wake_command}' detected while in state: {current_state}")
-            
-            # Only process the command if it's valid for the current state
-            if self._is_command_valid_for_state(wake_command, current_state):
-
-                handler = self.command_handlers.get(wake_command)
-                if (wake_command == WakeWordCommand.WAKE and current_state in [AssistantState.IDLE, AssistantState.PAUSED]) or \
-                (wake_command == WakeWordCommand.STOP and current_state in [AssistantState.SPEAKING, AssistantState.PAUSED]):
-                    await self.event_bus.publish("wakeword.stop_detection")
-                    self.logger.debug("WAKE WORD Detection is stopped....")
-                await handler()
-            else:
-                self.logger.info(f"Ignoring '{command}' command, not applicable in current state: {current_state}")
-
-        except Exception as e:
-            self.logger.error(f"Error handling wake word command: {e}")
 
     def _is_command_valid_for_state(self, command: WakeWordCommand, state: AssistantState) -> bool:
         """Check if a wake word command is valid for the current state"""
@@ -91,6 +62,38 @@ class WakeWordManager():
 
         return False
 
+    async def _on_wake_word_detected(self, command: str) -> None:
+        """Handle wake word detection events"""
+        try:
+            # Find the matching command enum
+            wake_command = next((cmd for cmd in WakeWordCommand if cmd.value == command), None)
+            self.command = wake_command
+            if not wake_command:
+                self.logger.warning(f"Invalid wake word command received: {command}")
+                return
+
+            # Get current state before handling command
+            current_state = await self.state_manager.get_state()
+            self.logger.info(f"Wake word '{wake_command}' detected while in state: {current_state}")
+            
+            # Only process the command if it's valid for the current state
+            if self._is_command_valid_for_state(wake_command, current_state):
+
+                handler = self.command_handlers.get(wake_command)
+                if (wake_command == WakeWordCommand.WAKE and current_state == AssistantState.IDLE) or \
+                (wake_command == WakeWordCommand.STOP and current_state in [AssistantState.SPEAKING, AssistantState.PAUSED]):
+                    await self.event_bus.publish("wakeword.stop_detection")
+                    self.logger.debug("WAKE WORD Detection is stopped....")
+                await handler()
+            else:
+                self.logger.info(f"Ignoring '{command}' command, not applicable in current state: {current_state}")
+
+        except Exception as e:
+            self.logger.error(f"WAKE WORD Manager error: {e}")
+    
+    def get_wake_command(self):
+        return self.command
+    
     async def _handle_wake(self) -> None:
         """Handle 'Hey Arlo' command"""
         current_state = await self.state_manager.get_state()
@@ -103,10 +106,7 @@ class WakeWordManager():
         current_state = await self.state_manager.get_state()
         if current_state in [AssistantState.SPEAKING, AssistantState.PAUSED]:
             await self.state_manager.set_state(AssistantState.IDLE)
-            # await self.event_bus.publish("s")
             self.logger.info("Speaking stopped and back to IDLE state with 'Stop Arlo'")
-            # Restart wake word detection since we're back to IDLE
-            await self.event_bus.publish("wakeword.start_detection")
 
     async def _handle_pause(self) -> None:
         """Handle 'Arlo Pause' command"""
@@ -121,12 +121,11 @@ class WakeWordManager():
         current_state = await self.state_manager.get_state()
         if current_state == AssistantState.PAUSED:
             await self.state_manager.set_state(AssistantState.SPEAKING)
-            # await self.event_bus.publish("arlo_continue_detected")
             self.logger.info("Speaking continued with 'Arlo Continue'")
     
     async def _on_tts_completed(self) -> None:
         """Handle TTS completion by transitioning back to IDLE state"""
         current_state = await self.state_manager.get_state()
-        if current_state == AssistantState.SPEAKING:
+        if current_state == AssistantState.SPEAKING and current_state is not AssistantState.IDLE:
             await self.state_manager.set_state(AssistantState.IDLE)
             self.logger.info("TTS completed, returning to IDLE state")

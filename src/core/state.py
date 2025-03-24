@@ -1,8 +1,9 @@
 from enum import Enum
 import asyncio
-import traceback
 from typing import Protocol, List
 from src.utils.logger import setup_logging
+from src.utils.helpers import GenericUtils
+
 
 class AssistantState(Enum):
     IDLE = "idle"
@@ -57,19 +58,12 @@ class StateManager:
         """Return the current state"""
         return self.current_state
     
-    def caller_info(self):
-        # Get the caller's stack trace
-        stack = traceback.extract_stack()
-        caller = stack[-3]
-        caller_info = f"{caller.filename}:{caller.lineno}"
-        return caller_info
-    
     async def set_state(self, new_state: AssistantState) -> bool:
         """
         Change the current state if the transition is valid
         Returns True if state was changed, False otherwise
         """
-        caller_info = self.caller_info()
+        caller_info = GenericUtils.caller_info()
         async with self._lock:
             
             if self.current_state == new_state:
@@ -82,7 +76,7 @@ class StateManager:
             
             old_state = self.current_state    
             self.current_state = new_state
-            self.logger.debug(f"State changed to {self.current_state} by {caller_info}")
+            self.logger.state(f"State changed to {self.current_state} by {caller_info}")
             
             # Notify observers of the state change
             await self._notify_observers(old_state, new_state)

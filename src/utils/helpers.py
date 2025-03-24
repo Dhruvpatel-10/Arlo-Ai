@@ -1,15 +1,84 @@
 import os
 import time
 import asyncio
-from functools import wraps
+import hashlib
+import json
+import validators
+import inspect
 from difflib import SequenceMatcher
 from typing import List, Optional
 from datetime import datetime
+from functools import wraps
 from src.utils.logger import setup_logging
-import validators
 from email_validator import validate_email, EmailNotValidError
 
-logger = setup_logging()
+logger = setup_logging(module_name="Helpers")
+
+class GenericUtils:
+    @staticmethod
+    def caller_info():
+        """
+        Get the filename and line number of the caller function.
+
+        Returns:
+            str: The caller filename and line number
+        """
+        for frame_info in inspect.stack()[1:]:
+            # Skip frames from internal runpy and from our own helpers module.
+            if "runpy" in frame_info.filename or "helpers.py" in frame_info.filename:
+                continue
+            return f"{GenericUtils.shorten_path(frame_info.filename)}:{frame_info.lineno}"
+        return "Unknown caller"
+    
+    @staticmethod
+    def retry(func=None, *, max_attempts=3, delay=0.4):
+        """
+        Decorator to retry a function multiple times on failure.
+
+        :param func: The function to decorate
+        :param max_attempts: The maximum number of attempts to make
+        :param delay: The amount of time to wait between attempts
+        :return: The decorated function
+
+        Example usage:
+
+        @retry
+        async def do_something():
+            # try to do something that may fail
+            pass
+
+        This will retry the function up to 3 times with a 0.4 second delay between attempts.
+        """
+        def decorator(func):
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+                last_error = None
+                for attempt in range(max_attempts):
+                    try:
+                        return await func(*args, **kwargs)
+                    except Exception as e:
+                        last_error = e
+                        logger.warning(f"Attempt {attempt+1} failed for {func.__name__}: {e}")
+                        if attempt < max_attempts - 1:
+                            await asyncio.sleep(delay)
+                logger.error(f"All retry attempts failed for {func.__name__}: {last_error}")
+                raise last_error
+            return wrapper
+        
+        # This is the key part that allows @retry to work without parentheses
+        if func is not None:
+            return decorator(func)
+        return decorator
+
+    @staticmethod
+    def shorten_path(full_path: str, project_name="Arlo-Ai") -> str:
+        parts = full_path.split(os.sep)  # Split path by OS separator (/ or \)
+        
+        if project_name in parts:
+            index = parts.index(project_name)
+            return os.sep.join(parts[index + 1:])  # Join parts after "Arlo-Ai"
+        
+        return full_path    
 
 class TimeUtils:
     """Time-related utility functions."""
@@ -70,11 +139,75 @@ class FileUtils:
             logger.error(f"File size error: {str(e)}")
             return None
 
+    @staticmethod
+    def clear_json_with_backup(json_path: str):
+        """
+        Create a backup of the JSON file before clearing it.
+        The backup file will have a .bak extension and will overwrite the previous backup.
+        """
+        try:
+            # Define backup file path
+            backup_path = str(json_path) + ".bak"
+            caller_info = GenericUtils.caller_info()
+            # Check if the original file exists before renaming
+            if os.path.exists(json_path):
+                os.replace(json_path, backup_path)  # Overwrite previous backup
+            
+            # Clear the JSON file by creating a new empty one
+            with open(json_path, "w") as f:
+                json.dump([], f)
+
+            logger.info(f"JSON file cleared and backup created at {GenericUtils.shorten_path(backup_path)} by {caller_info}")
+        
+        except Exception as e:
+            logger.error(f"JSON file clear error: {str(e)} by {caller_info}")
+
+    @staticmethod
+    def append_to_json(cache_file_path: str, entry_dict: dict):
+        """
+        Appends a new entry to the specified JSON file.
+
+        If the file does not exist, it will be created. If the file exists but is not valid JSON,
+        it will be reset to an empty list.
+
+        Args:
+            cache_file_path (str): The path to the JSON file.
+            entry_dict (dict): The new entry to append to the list.
+
+        Returns:
+            None
+        """
+        try:
+            # Load existing data if the file exists and is valid JSON
+            if os.path.exists(cache_file_path) and os.path.getsize(cache_file_path) > 0:
+                with open(cache_file_path, "r", encoding="utf-8") as f:
+                    try:
+                        data = json.load(f)
+                        if not isinstance(data, list):
+                            data = []  # Reset if it's not a list
+                    except json.JSONDecodeError:
+                        data = []  # Reset if file is corrupted
+            else:
+                data = []
+
+            # Append the new entry
+            data.append(entry_dict)
+
+            # Write back to the file
+            with open(cache_file_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            
+            caller_id = GenericUtils.caller_info()
+            logger.info(f"Successfully appended new entry to {GenericUtils.shorten_path(cache_file_path)} by {caller_id}")
+        except Exception as e:
+            caller_id = GenericUtils.caller_info()
+            logger.error(f"JSON file append error: {str(e)} || {caller_id}")
+
 class TextUtils:
     """Text processing utility functions."""
     
     @staticmethod
-    def truncate(text: str, max_length: int = 100) -> str:
+    def truncate(text: str, max_length: int = 50) -> str:
         """Truncate text to specified length with ellipsis."""
         return text[:max_length] + "..." if len(text) > max_length else text
 
@@ -84,6 +217,23 @@ class TextUtils:
         import re
         url_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
         return re.findall(url_pattern, text)
+    
+    @staticmethod
+    def generate_id(text: str) -> str:
+        """
+        Generates a unique, consistent ID based on the query text.
+
+        The ID is a 32-character hexadecimal string that is computed using
+        the BLAKE2b hash function.
+
+        Args:
+            text (str): The input text to generate an ID for.
+
+        Returns:
+            str: A unique, consistent ID for the given text.
+        """
+        return hashlib.blake2b(text.strip().encode(), digest_size=32).hexdigest()
+    
 
 class ValidationUtils:
     """Input validation utility functions."""
@@ -114,7 +264,7 @@ class FuzzyCache:
         self.similarity_threshold = similarity_threshold
         self.ttl = ttl
 
-    def find_similar_prompt(self, prompt: str):
+    def _find_similar_prompt(self, prompt: str):
         normalized = prompt.lower().strip()
         for cached_prompt in self.cache:
             similarity = SequenceMatcher(None, normalized, cached_prompt.lower()).ratio()
@@ -131,7 +281,7 @@ class FuzzyCache:
             self.cache = {k: v for k, v in self.cache.items() if now - v[1] < self.ttl}
 
             # Check for similar prompt
-            similar = self.find_similar_prompt(prompt)
+            similar = self._find_similar_prompt(prompt)
             if similar:
                 cached_prompt, similarity = similar
                 result, _ = self.cache[cached_prompt]
@@ -143,21 +293,3 @@ class FuzzyCache:
             self.cache[prompt] = (result, now)
             return result
         return wrapper
-
-def retry(max_attempts: int = 3, delay: float = 0.4):
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            last_error = None
-            for attempt in range(max_attempts):
-                try:
-                    return await func(*args, **kwargs)
-                except Exception as e:
-                    last_error = e
-                    logger.warning(f"Attempt {attempt+1} failed for {func.__name__}: {e}")
-                    if attempt < max_attempts - 1:
-                        await asyncio.sleep(delay)
-            logger.error(f"All retry attempts failed for {func.__name__}: {last_error}")
-            raise last_error
-        return wrapper
-    return decorator

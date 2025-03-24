@@ -4,12 +4,14 @@ from typing import Optional
 from src.speech.tts.engines.base_tts import TTSEngine
 from src.utils.logger import setup_logging
 from src.utils.config import AUDIO_DIR
+from src.utils.helpers import retry
 import aiofiles
 
 logger = setup_logging()
 
 class EdgeTTS(TTSEngine):
 
+    @retry
     async def generate_audio(self, text: str, voice="en-US-AvaNeural", InModule=False) -> Optional[bytes]:
         unique_id = int.from_bytes(os.urandom(8), 'big')
         temp_f = os.path.join(AUDIO_DIR, f'temp_text_{unique_id}.txt')
@@ -64,19 +66,6 @@ class EdgeTTS(TTSEngine):
                     os.remove(mp3_file)
                 except Exception as e:
                     logger.error(f"Error deleting audio file {mp3_file}: {e}")
-    
-    async def generate_audio_with_retry(self, text: str, voice:str) -> Optional[str]:
-        retries: int = 3
-        retry_delay: float = 0.3
-        attempt = 0
-        while attempt < retries:
-            audio_file = await self.generate_audio(text, voice)
-            if audio_file:
-                return audio_file
-            attempt += 1
-            if attempt < retries:
-                await asyncio.sleep(retry_delay)
-        return None
 
 if __name__ == "__main__":
     tts = EdgeTTS()

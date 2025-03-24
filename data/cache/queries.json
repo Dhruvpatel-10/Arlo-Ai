@@ -299,5 +299,12 @@
       "platform": "google",
       "query": "ms dhoni"
     }
+  },
+  {
+    "prompt": "Yahoo Yahoo",
+    "action": {
+      "platform": "yahoo",
+      "query": null
+    }
   }
 ]

@@ -113,7 +113,7 @@ class WakeWordDetector:
     
     async def wake_word_detected(self, command: str):
         """Handle wake word detection by publishing to event bus"""
-        await self.eventbus.publish("wakeword.detected", command)
+        await self.eventbus.publish("wakeword.detected.manager", command)
         return command
 
     async def process_audio_chunk(self, chunk) -> bool:
@@ -158,8 +158,7 @@ class WakeWordDetector:
     async def _start_wake_word_detection(self):
         """Start wake word detection"""
         try:
-            if self.is_running:
-                await self.start_detection()
+            await self.start_detection()
         except WakeWordError as e:
             raise
         except Exception as e:
