@@ -31,9 +31,7 @@ class Assistant:
         self.state_manager = STATE_MANAGER
 
         # Create background tasks
-        self.central_manager = await CentralAudioManager.create(
-            event_bus=self.event_bus, state_manager=self.state_manager
-        )
+        self.central_manager = await CentralAudioManager.create()
         self.search_query = SearchQueryFinder()
         await self.event_subscriber()
         await self.user_input_loop()  
