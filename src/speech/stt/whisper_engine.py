@@ -32,7 +32,8 @@ class WhisperEngine:
             lambda: WhisperModel(
                 "small.en",
                 download_root=self.model_path,
-                compute_type="int8"
+                compute_type="int8",
+                device="cpu"
             )
         )
         self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
