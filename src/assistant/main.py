@@ -1,82 +1,122 @@
 # main.py
-import aioconsole
 from src.llm.model import groq_prompt
-from src.actions.cmdpharser import process_command
-from src.actions.function_registry import FunctionRegistryAndCaller
-from src.core.event_bus import EventBus, EventPriority
-from src.core.state import StateManager
+from src.utils.shared_resources import EVENT_BUS, STATE_MANAGER
+from src.core.state import  AssistantState
 from src.audio.central_manager import CentralAudioManager
 from src.url.url_parser import SearchQueryFinder
-from src.speech.tts.tts_manager import TTSManager
-from src.utils.logger import setup_logging, delete_af
+from src.utils.logger import setup_logging
 
+class Assistant:
+    def __init__(self):
+        self.event_bus = EVENT_BUS
+        self.state_manager = STATE_MANAGER
+        self.logger = None
+        self.transcription = None
+        self.classification = None
+        self.central_manager = None
+        self.search_query = None
+        self.function_caller = None
 
-transcritoption = None
+    @classmethod
+    async def create(cls):
+        """Factory method to initialize the class asynchronously."""
+        self = cls()  # Create instance
 
-async def get_transcrition(transcript):
-    global transcritoption
-    transcritoption = transcript
+        # Initialize synchronous components
+        self.logger = setup_logging(module_name="Assistant")
+        self.logger.info("Initializing assistant...")
 
-async def main():
-    logger = setup_logging()
-    logger.info("Initializing assistant...")
-    event_bus = EventBus()
-    state_manager = StateManager()
-    central_manager = await CentralAudioManager.create(event_bus, state_manager)
-    function_caller = await FunctionRegistryAndCaller.create()
-    search_query = SearchQueryFinder()
-    tts_manager = TTSManager()
-    event_bus.subscribe("transcription_complete", get_transcrition, priority=EventPriority.HIGH, async_handler=True)
-    
+        # Initialize async components
+        self.event_bus = EVENT_BUS
+        self.state_manager = STATE_MANAGER
 
-    async def user_input_loop():
+        # Create background tasks
+        self.central_manager = await CentralAudioManager.create(
+            event_bus=self.event_bus, state_manager=self.state_manager
+        )
+        self.search_query = SearchQueryFinder()
+        await self.event_subscriber()
+        await self.user_input_loop()  
+
+        # Start any loops/tasks
+
+        return self
+
+    async def _get_result(self, transcript:str = None, classification:str = None) -> None:
+
+        if transcript is not None:
+            self.logger.info("Got the transcript")
+            self.transcription = transcript
+
+        if classification is not None:
+            self.logger.info("Got the classification")
+            self.classification = classification
+
+    async def event_subscriber(self) -> None:
+
+        self.event_bus.subscribe(
+        topic_name="get.result", 
+        callback=self._get_result, 
+        async_handler=True
+        )
+
+    async def user_input_loop(self):
         while True:
             try:
-                await event_bus.publish("start.wakeword.detection")
-                await event_bus.publish("start.audio.recording")
-                user_prompt = transcritoption
+                try:
+                    await self.event_bus.publish("start.wakeword.detection")
+                    await self.event_bus.publish("start.audio.recording")
+                    user_prompt: str = self.transcription
+                except (EOFError, KeyboardInterrupt):
+                    self.logger.info("User triggered exit.")
+                    break
+
+                if user_prompt.strip().lower() in ["exit", "q"]:
+                    self.logger.info("Exit command received. Shutting down.")
+                    break
+
+                if await self.state_manager.get_state() == AssistantState.IDLE:
+                    continue
+
+                await self.state_manager.set_state(AssistantState.PROCESSING)    
+
+                # action = await self.function_caller.call(user_prompt)
+                # action = str(action).lower()
+                # f_exe = None
+                # visual_context = None
+
+                # if action and "none" not in action.lower():
+                #     if 'open_browser' in action:
+                #         self.logger.info("OPENING BROWSER")
+                #         url_parser = self.search_query.find_query(prompt=user_prompt)
+                #         f_exe, visual_context = process_command(command=action, url=url_parser)
+                #     else:
+                #         self.logger.info("EXECUTING FUNCTION")
+                #         f_exe, visual_context = process_command(command=action, user_prompt=user_prompt)
+                #     self.logger.info(f"f_exe: {f_exe} || visual_context: {visual_context}")
+                print("== Reached groq promt ==")
+                response = await groq_prompt(prompt=user_prompt, img_context=None, function_execution=None)
+                self.event_bus.publish("send.api",response=response)
+                print("\n" + "="*50)
+                print(f"ASSISTANT: {response}")
+                print("="*50)
+                
+                try:
+                    await self.event_bus.publish("start.tts.playback", response)
+                except Exception as e:
+                    self.logger.error(f"Failed to play audio: {e}")            
+            
             except (EOFError, KeyboardInterrupt):
-                logger.info("User triggered exit.")
-                break
-            if user_prompt.lower() in ["exit", "q"]:
-                logger.info("Exit command received. Shutting down.")
-                break
-
-            action = await function_caller.call(user_prompt)
-            action = str(action).lower()
-            f_exe = None
-            visual_context = None
-
-            if action and "none" not in action.lower():
-                if 'open_browser' in action:
-                    logger.info("OPENING BROWSER")
-                    url_parser = search_query.find_query(prompt=user_prompt)
-                    f_exe, visual_context = process_command(command=action, url=url_parser)
-                else:
-                    logger.info("EXECUTING FUNCTION")
-                    f_exe, visual_context = process_command(command=action, user_prompt=user_prompt)
-                logger.info(f"f_exe: {f_exe} || visual_context: {visual_context}")
-
-            response = groq_prompt(prompt=user_prompt, img_context=visual_context, function_execution=f_exe)
-
-            print("\n" + "="*50)
-            print(f"ASSISTANT: {response}")
-            print("="*50)
-            try:
-                print("Playing Audio...")
-                await tts_manager.generate_and_play_audio(response)
+                self.logger.info("User triggered exit.")
             except Exception as e:
-                logger.error(f"Failed to play audio: {e}")            
+                self.logger.error(f"An unexpected error occurred: {e}")
+        try:
+            await self.user_input_loop()
+        except Exception as e:
+            self.logger.error(f"An unexpected error occurred: {e}")
+        finally:
+            await self.central_manager.shutdown()
 
-    try:
-        await user_input_loop()
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
-    finally:
-        delete_af()
-        await tts_manager.close_all_engines()
-        await central_manager.shutdown()
-
-        # Initiate shutdown
-        logger.info("Initiating shutdown sequence.")
-        logger.info("Assistant terminated. Goodbye!")
+            # Initiate shutdown
+            self.logger.info("Initiating shutdown sequence.")
+            self.logger.info("Assistant terminated. Goodbye!")

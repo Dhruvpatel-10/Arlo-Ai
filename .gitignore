@@ -8,6 +8,7 @@ webcam.jpg
 data/models/faster_whisper/*
 data/audio/*.mp3
 data/images/*.jpg
+data/models/classifier
 test
 remove_linux_packages.sh
 *.bak

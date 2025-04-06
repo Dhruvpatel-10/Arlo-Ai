@@ -3,7 +3,7 @@ from asyncio import Queue, Semaphore, Lock, Event, create_task, gather, to_threa
 from typing import List, Tuple, Dict
 import sounddevice as sd
 import soundfile as sf
-from src.core.event_bus import EventBus, EventPriority
+from src.core.event_bus import EventBus
 from src.core.state import StateManager, AssistantState
 from src.speech.tts.engines import edge, speechify
 from blingfire import text_to_sentences
@@ -33,7 +33,6 @@ class TTSManager:
         self.event_bus.subscribe(
             "generate.and.play.audio",
             self._handle_generate_and_play_audio,
-            priority=EventPriority.HIGH,
             async_handler=True
         )
 

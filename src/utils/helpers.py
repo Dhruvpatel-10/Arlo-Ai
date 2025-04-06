@@ -7,6 +7,7 @@ import validators
 import inspect
 from difflib import SequenceMatcher
 from typing import List, Optional
+from collections import OrderedDict
 from datetime import datetime
 from functools import wraps
 from src.utils.logger import setup_logging
@@ -16,15 +17,18 @@ logger = setup_logging(module_name="Helpers")
 
 class GenericUtils:
     @staticmethod
-    def caller_info():
+    def caller_info(skip_one_more: bool = False):
         """
         Get the filename and line number of the caller function.
 
         Returns:
             str: The caller filename and line number
         """
-        for frame_info in inspect.stack()[1:]:
-            # Skip frames from internal runpy and from our own helpers module.
+        stack = inspect.stack()
+        depth = 2 if skip_one_more else 1
+
+        for frame_info in stack[depth:]:  # Start from the selected depth
+            # Skip frames from internal runpy and our own helpers module
             if "runpy" in frame_info.filename or "helpers.py" in frame_info.filename:
                 continue
             return f"{GenericUtils.shorten_path(frame_info.filename)}:{frame_info.lineno}"
@@ -86,14 +90,17 @@ class TimeUtils:
     @staticmethod
     def get_timestamp() -> str:
         """Get current timestamp in ISO format."""
-        return datetime.now().isoformat()
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     @staticmethod
     def format_duration(seconds: float) -> str:
-        """Format duration in seconds to human-readable string."""
+        """Format duration in seconds to a human-readable string."""
+        if seconds < 1:
+            return f"{seconds:.3g}s"  # 3 significant digits for small times
+        
         minutes, seconds = divmod(int(seconds), 60)
         hours, minutes = divmod(minutes, 60)
-        
+
         parts = []
         if hours > 0:
             parts.append(f"{hours}h")
@@ -101,7 +108,7 @@ class TimeUtils:
             parts.append(f"{minutes}m")
         if seconds > 0 or not parts:
             parts.append(f"{seconds}s")
-            
+
         return " ".join(parts)
 
 class FileUtils:
@@ -259,37 +266,57 @@ class ValidationUtils:
             return False
 
 class FuzzyCache:
-    def __init__(self, similarity_threshold=0.85, ttl=3600):
-        self.cache = {}
-        self.similarity_threshold = similarity_threshold
-        self.ttl = ttl
+    cache = OrderedDict()  # Maintains LRU order globally
+    similarity_threshold = 0.85
+    ttl = 3600
+    max_size = 100
+    cache_lock = asyncio.Lock()  # Ensures thread safety
+    normalized_keys = []  # Faster lookup for fuzzy matches
 
-    def _find_similar_prompt(self, prompt: str):
+    @classmethod
+    def _find_similar_prompt(cls, prompt: str):
         normalized = prompt.lower().strip()
-        for cached_prompt in self.cache:
-            similarity = SequenceMatcher(None, normalized, cached_prompt.lower()).ratio()
-            logger.debug(f"Comparing:\n  New: '{prompt}'\n  Cached: '{cached_prompt}'\n  Similarity: {similarity:.2f}")
-            if similarity >= self.similarity_threshold:
-                return cached_prompt, similarity
+        for index, cached_prompt in enumerate(cls.normalized_keys):
+            similarity = SequenceMatcher(None, normalized, cached_prompt).ratio()
+            if similarity >= cls.similarity_threshold:
+                return list(cls.cache.keys())[index], similarity  # Return original key
         return None
 
-    def fuzzy_cached(self, func):
+    @classmethod
+    async def _clean_expired(cls):
+        """ Periodically removes expired cache items to prevent slowdowns. """
+        now = time.time()
+        async with cls.cache_lock:
+            expired_keys = [k for k, v in cls.cache.items() if now - v[1] >= cls.ttl]
+            for k in expired_keys:
+                del cls.cache[k]
+                cls.normalized_keys.remove(k.lower())  # Remove from lookup list
+
+    @classmethod
+    def fuzzy_cached(cls, func):
         @wraps(func)
         async def wrapper(prompt: str, *args, **kwargs):
-            now = time.time()
-            # Clean expired entries
-            self.cache = {k: v for k, v in self.cache.items() if now - v[1] < self.ttl}
+            await cls._clean_expired()  # Periodic cleanup
 
-            # Check for similar prompt
-            similar = self._find_similar_prompt(prompt)
-            if similar:
-                cached_prompt, similarity = similar
-                result, _ = self.cache[cached_prompt]
-                logger.debug(f"Cache hit for prompt '{prompt}' (similarity: {similarity:.2f})")
-                return result
+            async with cls.cache_lock:
+                similar = cls._find_similar_prompt(prompt)
+                if similar:
+                    cached_prompt, similarity = similar
+                    cached_result, _ = cls.cache[cached_prompt]
+                    logger.debug(f"✅ CACHE HIT for '{prompt}' (Matched: '{cached_prompt}', Similarity: {similarity:.2f})")
+                    cls.cache.move_to_end(cached_prompt)  # Mark as recently used
+                    return cached_result  # Return LLM response
 
-            # Execute function if no cache hit
+            logger.debug(f"❌ CACHE MISS for '{prompt}' - Calling LLM API...")
             result = await func(prompt, *args, **kwargs)
-            self.cache[prompt] = (result, now)
+
+            async with cls.cache_lock:
+                if len(cls.cache) >= cls.max_size:
+                    removed_key, _ = cls.cache.popitem(last=False)  # Remove oldest entry
+                    cls.normalized_keys.pop(0)  # Remove from lookup list
+
+                cls.cache[prompt] = (result, time.time())  # Store new response
+                cls.normalized_keys.append(prompt.lower())  # Store normalized key
             return result
         return wrapper
+    

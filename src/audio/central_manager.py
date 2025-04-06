@@ -4,15 +4,13 @@ from src.audio.record import AudioRecorder
 from src.speech.stt.whisper_engine import WhisperEngine
 from src.wake_word.porcupine_detector import WakeWordDetector
 from src.wake_word.wake_manager import WakeWordManager
-from src.core.event_bus import EventBus, EventPriority
+from src.utils.shared_resources import EVENT_BUS, STATE_MANAGER
 from src.core.state import StateManager, AssistantState
 from src.speech.tts.tts_manager import TTSManager
 from src.utils.logger import setup_logging
 
 class CentralAudioManager():
-    def __init__(self, 
-                 event_bus: EventBus,
-                 state_manager: StateManager):
+    def __init__(self):
         """
         Initialize the central audio manager
         
@@ -20,23 +18,23 @@ class CentralAudioManager():
             event_bus (EventBus): Event bus for system-wide communication
             state_manager (StateManager): State manager for tracking assistant state
         """
-        self.event_bus = event_bus
-        self.state_manager = state_manager
+        self.event_bus = EVENT_BUS
+        self.state_manager = STATE_MANAGER
         self.logger = setup_logging(module_name="CentralAudioManager")
 
         # Initialize components
-        self.wake_detector = WakeWordDetector(event_bus=event_bus, state_manager=state_manager)
-        self.audio_recorder = AudioRecorder(event_bus=event_bus, sample_rate=16000, channels=1, pre_roll_duration=2, max_queue_size=10)
+        self.wake_detector = WakeWordDetector(event_bus=self.event_bus, state_manager=self.state_manager)
+        self.audio_recorder = AudioRecorder(sample_rate=16000, channels=1, pre_roll_duration=2, max_queue_size=10)
         self.whisper_engine = WhisperEngine()
-        self.wake_manager = WakeWordManager(event_bus, state_manager)
+        self.wake_manager = WakeWordManager(event_bus=self.event_bus, state_manager=self.state_manager)
 
         # Create TTS components
-        self.tts_manager = TTSManager(event_bus, state_manager)
+        self.tts_manager = TTSManager(event_bus=self.event_bus, state_manager=self.state_manager)
         
         self.transcription = None
 
     @classmethod
-    async def create(cls, event_bus: EventBus, state_manager: StateManager) -> 'CentralAudioManager':
+    async def create(cls) -> 'CentralAudioManager':
         """
         Create and initialize a new CentralAudioManager instance.
         
@@ -50,7 +48,7 @@ class CentralAudioManager():
         Raises:
             Exception: If initialization fails
         """
-        instance = cls(event_bus, state_manager)
+        instance = cls()
         await instance._initialize()
         return instance
 
@@ -111,26 +109,22 @@ class CentralAudioManager():
 
         self.event_bus.subscribe(
             "start.wakeword.detection", 
-            self._handle_wake_word_detected, 
-            priority=EventPriority.HIGH, 
+            self._handle_wake_word_detected,   
             async_handler=True)
         
         self.event_bus.subscribe(
             "start.audio.recording", 
             self._handle_audio_recorded, 
-            priority=EventPriority.HIGH, 
             async_handler=True)
         
         self.event_bus.subscribe(
             "utterance_ready", 
             self._handle_transcription_complete, 
-            priority=EventPriority.HIGH, 
             async_handler=True)
 
         self.event_bus.subscribe(
             "start.tts.playback",
-            self._handle_tts_playback,
-            priority=EventPriority.HIGH,
+            self._handle_tts_playback,       
             async_handler=True
         )
 
@@ -180,7 +174,8 @@ class CentralAudioManager():
         """Handle completed transcription"""
         self.logger.state("State: PROCESSING – Transcribing audio...")
         transcription = await self.whisper_engine.transcribe_audio(utterance)
-        await self.event_bus.publish("transcription_complete", transcription)
+        await self.event_bus.publish("get.result", transcript=transcription)
+        await self.event_bus.publish("send.api",transcription=transcription)
         self.logger.debug(f"Transcription completed: {transcription}")
 
 
@@ -193,6 +188,3 @@ class CentralAudioManager():
     async def _handle_tts_playback(self, text: str, voice_name: str = "Ava_Edge") -> None:
         self.logger.debug(f"Publishing 'generate.and.play.audio' event with text: {text[:20]}...")
         await self.event_bus.publish("generate.and.play.audio", text, voice_name)
-    
-
-    

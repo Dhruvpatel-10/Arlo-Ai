@@ -5,13 +5,13 @@ import json
 import aiofiles
 from typing import Dict, Any, List, Tuple
 from src.utils.logger import setup_logging
-from src.utils.config import FUNC_CACHE_DIR, FUNC_LLM_MODEL
+from src.utils.config import FUNC_LLM_MODEL
 from groq import AsyncGroq
 
 groq_api = os.getenv("GROQ_FUNC_CALL_API")
 logger = setup_logging()
 
-class FunctionRegistryAndCaller:
+class FunctionRegistry:
     def __init__(self, cache_file=FUNC_CACHE_DIR):
         self.functions: Dict[str, Dict[str, Any]] = {}
         self.patterns: Dict[str, re.Pattern] = {}
@@ -62,17 +62,6 @@ class FunctionRegistryAndCaller:
         except Exception as e:
             logger.error(f"Failed to save cache: {e}")
 
-    def rule_based_call(self, prompt: str) -> str:
-        if prompt in self.cache:
-            logger.info(f"RETURNING FROM CACHE {prompt}")
-            return self.cache[prompt]
-        
-        for name, pattern in self.patterns.items():
-            if pattern.search(prompt):
-                return name
-
-        return "Pass to the LLM"
-
     async def llm_based_call(self, prompt: str) -> str:
         sys_msg = '''You are an AI assistant tasked with selecting exactly one action from this list based on the user's input: capture_webcam, extract_clipboard, take_screenshot, open_word, open_excel, open_powerpoint, open_browser, None. Respond with only one action word, exactly as listed. Choose 'open_browser' for any request to open a specific website, search engine, or platform. Respond with 'None' if no action clearly applies. You are not allowed to return any action that is not on the list. If the input does not explicitly map to an action in the list, return 'None.' Your response must contain exactly one word from the list. And also know that user prompt is forwarded to LLM any way so if the prompt is like a LLM can answer it then return 'None'. 
             '''
@@ -109,12 +98,7 @@ class FunctionRegistryAndCaller:
 
     async def call(self, prompt: str) -> str:
         try:            
-            rule_based_result = self.rule_based_call(prompt)
-            logger.info(f"Rule-based result: {rule_based_result}")
-            
-            if rule_based_result != "Pass to the LLM":
-                return rule_based_result
-            
+
             llm_result = await self.llm_based_call(prompt)
             logger.info(f"LLM-based result: {llm_result}")
             return llm_result

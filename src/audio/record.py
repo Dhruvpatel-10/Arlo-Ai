@@ -5,7 +5,7 @@ import asyncio
 import time
 from typing import Optional, Dict, Any
 from src.wake_word.vad import VADManager
-from src.core.event_bus import EventBus, EventPriority
+from src.utils.shared_resources import EVENT_BUS
 from src.utils.logger import setup_logging
 from collections import deque
 
@@ -15,7 +15,6 @@ class AudioRecorder:
     """
     def __init__(
         self,
-        event_bus: Optional[EventBus] = None,
         sample_rate: int = 16000,
         channels: int = 1,
         dtype: np.dtype = np.int16,
@@ -25,7 +24,7 @@ class AudioRecorder:
         max_queue_size: int = 10  # Maximum number of utterances to keep in queue
     ):
         """Initialize the AudioRecorder with VADManager."""
-        self.event_bus = event_bus
+        self.event_bus = EVENT_BUS
         self.sample_rate = sample_rate
         self.channels = channels
         self.dtype = dtype
@@ -56,8 +55,7 @@ class AudioRecorder:
         self.logger = setup_logging()
         self.event_bus.subscribe(
             "audio.record.request", 
-            self._handle_recording, 
-            priority=EventPriority.HIGH, 
+            self._handle_recording,
             async_handler=True
         )
         # Your initialization logic here

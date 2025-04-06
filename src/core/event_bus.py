@@ -1,23 +1,16 @@
 # core/event_bus.py
-from typing import Dict, List, Callable, Optional
-from dataclasses import dataclass, field
-from threading import Lock
-import asyncio
-from enum import Enum, auto
-from src.utils.logger import setup_logging
-from collections import defaultdict
 import time
-from src.utils.helpers import GenericUtils
-
-class EventPriority(Enum):
-    LOW = auto()
-    MEDIUM = auto()
-    HIGH = auto()
+import asyncio
+from threading import Lock
+from collections import defaultdict
+from typing import Dict, List, Callable, Optional
+from src.utils.helpers import GenericUtils, TimeUtils
+from dataclasses import dataclass, field
+from src.utils.logger import setup_logging
 
 @dataclass
 class Subscriber:
     callback: Callable
-    priority: EventPriority = EventPriority.MEDIUM
     async_handler: bool = False
     last_called: float = field(default_factory=lambda: 0.0)
     call_count: int = 0
@@ -53,11 +46,7 @@ class EventBus:
         if self.logger:
             self.logger.debug("Event bus shut down")
 
-
-
-    def subscribe(self, topic_name: str, callback: Callable, 
-             priority: EventPriority = EventPriority.MEDIUM,
-             async_handler: bool = False) -> None:
+    def subscribe(self, topic_name: str, callback: Callable, async_handler: bool = False) -> None:
         with self._lock:
             if topic_name not in self._topics:
                 self._topics[topic_name] = Topic(topic_name)
@@ -67,35 +56,15 @@ class EventBus:
         # Use topic-specific lock for better concurrency
         with topic._lock:
             callback_id = id(callback)
-            subscriber = Subscriber(callback, priority, async_handler)
+            subscriber = Subscriber(callback, async_handler)
             
             # Store the subscriber
             topic.subscribers[callback_id] = subscriber
             
-            # Optimized priority-based insertion
-            self._insert_subscriber_ordered(topic, callback_id, priority)
-            
-            self.logger.event(f"Subscribed to topic '{topic_name}' with priority {priority.name} and subscribed in {GenericUtils.caller_info()}")
-
-    def _insert_subscriber_ordered(self, topic: Topic, callback_id: int, priority: EventPriority) -> None:
-        """Optimized binary search insertion based on priority."""
-        if not topic.subscriber_order:
+            # Simply append to the subscriber order list
             topic.subscriber_order.append(callback_id)
-            return
-
-        # binary search insertion
-        left, right = 0, len(topic.subscriber_order)
-        while left < right:
-            mid = (left + right) // 2
-            mid_id = topic.subscriber_order[mid]
-            mid_priority = topic.subscribers[mid_id].priority.value
             
-            if mid_priority < priority.value:
-                right = mid
-            else:
-                left = mid + 1
-                
-        topic.subscriber_order.insert(left, callback_id)
+            self.logger.event(f"Subscribed to topic '{topic_name}' and subscribed in {GenericUtils.caller_info()}")
 
     def unsubscribe(self, topic_name: str, callback: Callable) -> None:
         with self._lock:
@@ -136,22 +105,21 @@ class EventBus:
         """
         Publish an event to a topic with optimized concurrent execution.
         """
-        current_time = time.time()
-        caller_info = GenericUtils.caller_info()
-        self.logger.event(f"EVENT Publish by {caller_info} and {topic_name}")
+        current_time = TimeUtils.get_timestamp()
+        caller_info = GenericUtils.caller_info(skip_one_more=True)
+        self.logger.event(f"EVENT Publish by '{caller_info}' and '{topic_name}'")
         # Fast path for non-existent topics
         if topic_name not in self._topics:
             if self.logger:
                 self.logger.warning(f"No subscribers for topic '{topic_name}'")
-            return []
+            return None
 
         topic = self._topics[topic_name]
-        
-        # self.logger.debug(f"Publishing to topic '{topic}' by {caller_info}")        
+
         # Get subscribers with topic-specific lock
         with topic._lock:
             if not topic.subscribers:
-                return []
+                return None
             
             # Update topic statistics
             topic.last_published = current_time
@@ -209,3 +177,24 @@ class EventBus:
         if topic_name:
             return self._topic_stats.get(topic_name, {})
         return dict(self._topic_stats)
+    
+if __name__ == "__main__":
+
+    async def you_are_not():
+        pass
+
+    eb = EventBus()
+
+    sub = Subscriber(callback=you_are_not, async_handler=True)
+    print("== Subscriber ==")
+    print(sub)
+    sub_id = id(you_are_not)
+
+    gg = Topic(name="you_are_not", subscribers={sub_id: sub}, subscriber_order=[sub_id])
+    print("\n== Topic ==")
+    print(gg)
+    gg.subscriber_order.append(str(sub_id) + " This is added")
+    print("\n== Topic ==")
+    print(gg)
+    states= eb.get_topic_stats()
+    print(f"\n== States ==\n{states}")

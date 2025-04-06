@@ -63,7 +63,7 @@ class StateManager:
         Change the current state if the transition is valid
         Returns True if state was changed, False otherwise
         """
-        caller_info = GenericUtils.caller_info()
+        caller_info = GenericUtils.caller_info(skip_one_more=True)
         async with self._lock:
             
             if self.current_state == new_state:

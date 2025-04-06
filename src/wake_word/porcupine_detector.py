@@ -7,7 +7,7 @@ import platform
 import asyncio
 from typing import List, Optional
 from threading import Lock
-from src.core.event_bus import EventBus, EventPriority
+from src.core.event_bus import EventBus
 from src.core.state import StateManager, AssistantState
 from src.utils.logger import setup_logging
 from src.wake_word.wake_manager import WakeWordCommand
@@ -67,14 +67,12 @@ class WakeWordDetector:
         await self._initialize_porcupine()
         self.eventbus.subscribe(
             "wakeword.start_detection",
-            self._start_wake_word_detection, 
-            priority=EventPriority.HIGH, 
+            self._start_wake_word_detection,
             async_handler=True)
 
         self.eventbus.subscribe(
             "wakeword.stop_detection",
             self._stop_detection,
-            priority=EventPriority.HIGH,
             async_handler=True)
         self.logger.debug(f"Initialization took {time.time() - start_time:.2f} seconds")
 

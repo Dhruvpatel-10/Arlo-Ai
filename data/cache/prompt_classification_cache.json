@@ -8,5 +8,20 @@
     "id": "f5f3f10f9f525c0a18b8d767d86d9e6c2d969e36d5ba4e532f9f2c2b7c29761f",
     "text": "Can you please one browser and search for the tere naam movie on youtube",
     "classification": "tool"
+  },
+  {
+    "id": "test",
+    "text": "I love using AI",
+    "classification": "tool"
+  },
+  {
+    "id": "test",
+    "text": "I want to watch a movie",
+    "classification": "tool"
+  },
+  {
+    "id": "test",
+    "text": "I'm feeling sad today",
+    "classification": "conversation"
   }
 ]

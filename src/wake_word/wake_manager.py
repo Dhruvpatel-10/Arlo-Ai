@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Dict, Callable
-from src.core.event_bus import EventBus, EventPriority
+from src.core.event_bus import EventBus
 from src.core.state import StateManager, AssistantState
 from src.utils.logger import setup_logging
 
@@ -29,7 +29,6 @@ class WakeWordManager():
         self.event_bus.subscribe(
             "wakeword.detected.manager",
             self._on_wake_word_detected,
-            priority=EventPriority.HIGH,
             async_handler=True
         )
 
@@ -37,7 +36,6 @@ class WakeWordManager():
         self.event_bus.subscribe(
             "tts.completed",
             self._on_tts_completed,
-            priority=EventPriority.HIGH,
             async_handler=True
         )
 

@@ -4,7 +4,7 @@ import base64
 from typing import Optional
 from src.speech.tts.engines.base_tts import TTSEngine
 from src.utils.logger import setup_logging
-from src.utils.helpers import retry
+from src.utils.helpers import GenericUtils
 
 logger = setup_logging()
 
@@ -12,7 +12,7 @@ class SpeechifyTTS(TTSEngine):
     def __init__(self):
         self.url = "https://audio.api.speechify.com/generateAudioFiles"
 
-    @retry
+    @GenericUtils.retry
     async def generate_audio(self, text: str, voice="sophia") -> Optional[bytes]:
         logger.debug(f"SpeechifyTTS generating audio for: {text}")
         payload = {
