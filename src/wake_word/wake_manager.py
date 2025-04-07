@@ -95,16 +95,22 @@ class WakeWordManager():
     async def _handle_wake(self) -> None:
         """Handle 'Hey Arlo' command"""
         current_state = await self.state_manager.get_state()
-        if current_state in [AssistantState.IDLE, AssistantState.PAUSED]:
+        if current_state == AssistantState.IDLE:
             await self.state_manager.set_state(AssistantState.LISTENING)
-            self.logger.info("Activated assistant with 'Hey Arlo'")
+            # Stop wake word detection while processing
+            await self.event_bus.publish("wakeword.stop_detection")
+            # Start audio recording
+            await self.event_bus.publish("start.audio.recording")
+            self.logger.info("Activated assistant with 'Hey Arlo' and started audio recording")
 
     async def _handle_stop(self) -> None:
         """Handle 'Stop Arlo' command"""
         current_state = await self.state_manager.get_state()
         if current_state in [AssistantState.SPEAKING, AssistantState.PAUSED]:
             await self.state_manager.set_state(AssistantState.IDLE)
-            self.logger.info("Speaking stopped and back to IDLE state with 'Stop Arlo'")
+            # Restart wake word detection
+            await self.event_bus.publish("start.wakeword.detection")
+            self.logger.info("Speaking stopped and restarting wake word detection")
 
     async def _handle_pause(self) -> None:
         """Handle 'Arlo Pause' command"""
@@ -124,6 +130,8 @@ class WakeWordManager():
     async def _on_tts_completed(self) -> None:
         """Handle TTS completion by transitioning back to IDLE state"""
         current_state = await self.state_manager.get_state()
-        if current_state == AssistantState.SPEAKING and current_state is not AssistantState.IDLE:
+        if current_state == AssistantState.SPEAKING:
             await self.state_manager.set_state(AssistantState.IDLE)
-            self.logger.info("TTS completed, returning to IDLE state")
+            # Restart wake word detection
+            await self.event_bus.publish("start.wakeword.detection")
+            self.logger.info("TTS completed, returning to IDLE state and restarting wake word detection")

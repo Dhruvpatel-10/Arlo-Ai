@@ -35,6 +35,13 @@ class TTSManager:
             self._handle_generate_and_play_audio,
             async_handler=True
         )
+        
+        # Subscribe to start.tts.playback event
+        self.event_bus.subscribe(
+            "start.tts.playback",
+            self._handle_tts_playback,
+            async_handler=True
+        )
 
     async def _handle_generate_and_play_audio(self, text: str, voice_name: str) -> None:
         try:
@@ -44,6 +51,14 @@ class TTSManager:
 
         except Exception as e:
             self.logger.error(f"Failed to generate and play audio: {e}", exc_info=True)
+
+    async def _handle_tts_playback(self, data: str) -> None:
+        """Handle TTS playback request"""
+        try:
+            self.logger.info("Received start.tts.playback event")
+            await self.generate_and_play_audio(data, "Ava_Edge")
+        except Exception as e:
+            self.logger.error(f"Failed to handle TTS playback: {e}", exc_info=True)
 
     async def play_audio_async(self, audio_data: np.ndarray, samplerate: int) -> None:
         try:

@@ -9,6 +9,8 @@ license = {text = "EULA"}
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
 dependencies = [
+    "fastapi (>=0.110.0,<1.0.0)",
+    "uvicorn[standard] (>=0.27.1,<1.0.0)",
     "aiohappyeyeballs (==2.4.4)",
     "aioconsole (==0.8.1)",
     "aiofiles (==24.1.0)",
@@ -57,3 +59,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 packages = [{include ="src"}]
+
+[tool.poetry.scripts]
+dev = "uvicorn:main src.api.main:app --host 127.0.0.1 --port 8000 --reload"
+start = "uvicorn:main src.api.main:app --host 127.0.0.1 --port 8000"
