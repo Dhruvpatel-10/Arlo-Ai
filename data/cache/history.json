@@ -14,5 +14,13 @@
     {
         "role": "assistant",
         "content": "It sounds like you're excited to chat. What's on your mind, I'm all ears."
+    },
+    {
+        "role": "user",
+        "content": "Hello."
+    },
+    {
+        "role": "assistant",
+        "content": "Hello back to you. It's nice to finally have a normal hello, after all those repeats earlier. How's your day going so far?"
     }
 ]
