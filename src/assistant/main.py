@@ -4,10 +4,9 @@ from src.llm.model import groq_prompt
 from src.utils.shared_resources import EVENT_BUS, STATE_MANAGER
 from src.core.state import  AssistantState
 from src.audio.central_manager import CentralAudioManager
-from src.url.url_parser import SearchQueryFinder
+from src.actions.url.url_parser import SearchQueryFinder
 from src.utils.logger import setup_logging
-from dotenv import load_dotenv
-load_dotenv()
+
 class Assistant:
     def __init__(self):
         self.event_bus = EVENT_BUS
@@ -18,26 +17,25 @@ class Assistant:
         self.central_manager = None
         self.search_query = None
         self.function_caller = None
+        self.ServerConnected = False
 
     @classmethod
-    async def create(cls):
+    async def create(cls, sever_connected: bool = False):
         """Factory method to initialize the class asynchronously."""
         self = cls()  # Create instance
         
         # Initialize synchronous components
         self.logger = setup_logging(module_name="Assistant")
-
+        self.ServerConnected = sever_connected
         # Initialize async components
         self.event_bus = EVENT_BUS
         self.state_manager = STATE_MANAGER
 
         # Create background tasks
-        self.central_manager = await CentralAudioManager.create()
+        self.central_manager = await CentralAudioManager.create(server_connected=sever_connected)
         self.search_query = SearchQueryFinder()
         await self.event_subscriber()
-        
-        # Don't start the user_input_loop here
-        # Instead, return the instance so the caller can decide when to start it
+
         return self
 
     # Add a method to start processing
@@ -66,16 +64,14 @@ class Assistant:
     async def user_input_loop(self):
         while True:
             try:
-                try:
-                    await self.event_bus.publish("start.wakeword.detection")
-                    await self.event_bus.publish("start.audio.recording")
-                    user_prompt: str = self.transcription
-                except (EOFError, KeyboardInterrupt):
-                    self.logger.info("User triggered exit.")
-                    break
+                
+                await self.event_bus.publish("start.wakeword.detection")
+                await self.event_bus.publish("start.audio.recording")
+                user_prompt: str = self.transcription
 
-                if user_prompt.strip().lower() in ["exit", "q"]:
+                if user_prompt is not None and user_prompt.strip().lower() in ["exit", "exit.", "exit!"]:
                     self.logger.info("Exit command received. Shutting down.")
+                    await self.central_manager.shutdown()
                     break
 
                 if await self.state_manager.get_state() == AssistantState.IDLE:
@@ -99,7 +95,8 @@ class Assistant:
                 #     self.logger.info(f"f_exe: {f_exe} || visual_context: {visual_context}")
                 print("== Reached groq promt ==")
                 response = await groq_prompt(prompt=user_prompt, img_context=None, function_execution=None)
-                await self.event_bus.publish("send.api",response=response)
+                if self.ServerConnected:
+                    await self.event_bus.publish("send.api",response=response)
                 print("\n" + "="*50)
                 print(f"ASSISTANT: {response}")
                 print("="*50)
@@ -111,15 +108,7 @@ class Assistant:
             
             except (EOFError, KeyboardInterrupt):
                 self.logger.info("User triggered exit.")
+                await self.central_manager.shutdown()
             except Exception as e:
                 self.logger.error(f"An unexpected error occurred: {e}")
-        try:
-            await self.user_input_loop()
-        except Exception as e:
-            self.logger.error(f"An unexpected error occurred: {e}")
-        finally:
-            await self.central_manager.shutdown()
-
-            # Initiate shutdown
-            self.logger.info("Initiating shutdown sequence.")
-            self.logger.info("Assistant terminated. Goodbye!")
+                await self.central_manager.shutdown()
