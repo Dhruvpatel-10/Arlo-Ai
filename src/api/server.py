@@ -8,8 +8,6 @@ from src.utils.shared_resources import EVENT_BUS
 from src.utils.logger import setup_logging
 from src.api.websocket_conn import AssistantBackend
 from src.assistant.main import Assistant
-from dotenv import load_dotenv
-load_dotenv()
 
 # Set up logging
 logger = setup_logging(module_name="API_Handler")
@@ -26,7 +24,7 @@ async def lifespan(app: FastAPI):
     global assistant_instance
     
     # Create the assistant but modify to run user_input_loop as a background task
-    assistant_instance = await Assistant.create()
+    assistant_instance = await Assistant.create(sever_connected=True)
     
     processing_task = await assistant_instance.start_processing()
     background_tasks.add(processing_task)

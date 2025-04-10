@@ -8,7 +8,6 @@ from src.utils.logger import setup_logging
 from src.utils.config import FUNC_LLM_MODEL
 from groq import AsyncGroq
 
-groq_api = os.getenv("GROQ_FUNC_CALL_API")
 logger = setup_logging()
 
 class FunctionRegistry:

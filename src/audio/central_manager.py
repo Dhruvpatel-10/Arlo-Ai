@@ -30,11 +30,11 @@ class CentralAudioManager():
 
         # Create TTS components
         self.tts_manager = TTSManager(event_bus=self.event_bus, state_manager=self.state_manager)
-        
+        self.ServerConnected = False
         self.transcription = None
 
     @classmethod
-    async def create(cls) -> 'CentralAudioManager':
+    async def create(cls, server_connected: bool = False) -> 'CentralAudioManager':
         """
         Create and initialize a new CentralAudioManager instance.
         
@@ -49,6 +49,7 @@ class CentralAudioManager():
             Exception: If initialization fails
         """
         instance = cls()
+        instance.ServerConnected = server_connected
         await instance._initialize()
         return instance
 
@@ -80,6 +81,7 @@ class CentralAudioManager():
 
     async def shutdown(self):
         """Shutdown and cleanup all components safely"""
+        self.logger.info("Shutting down CentralAudioManager...")
         components = [
             self.wake_detector,
             self.audio_recorder,
@@ -175,7 +177,8 @@ class CentralAudioManager():
         self.logger.state("State: PROCESSING – Transcribing audio...")
         transcription = await self.whisper_engine.transcribe_audio(utterance)
         await self.event_bus.publish("get.result", transcript=transcription)
-        await self.event_bus.publish("send.api",transcription=transcription)
+        if self.ServerConnected:
+            await self.event_bus.publish("send.api",transcription=transcription)
         self.logger.debug(f"Transcription completed: {transcription}")
 
 
