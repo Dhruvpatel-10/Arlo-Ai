@@ -1,5 +1,5 @@
 data/logs
-data/cache/history.json
+data/cache
 env
 .env
 __pycache__
