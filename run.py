@@ -15,8 +15,6 @@ async def run_assistant_only():
         await processing_task
     except KeyboardInterrupt:
         print("Shutting down assistant...")
-        if hasattr(assistant, "central_manager"):
-            await assistant.central_manager.shutdown()
 
 def run_server(host="0.0.0.0", port=8000, reload=True):
     """Start the uvicorn server directly in the current shell"""
