@@ -28,15 +28,6 @@ async def lifespan(app: FastAPI):
     
     processing_task = await assistant_instance.start_processing()
     background_tasks.add(processing_task)
-    
-    # Set up signal handlers for graceful shutdown
-    def signal_handler():
-        logger.info("Shutdown signal received")
-        asyncio.create_task(shutdown())
-    
-    # Register signal handlers
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        asyncio.get_event_loop().add_signal_handler(sig, signal_handler)
         
     logger.info("Assistant initialized successfully")
     yield
