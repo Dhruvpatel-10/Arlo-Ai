@@ -30,7 +30,7 @@ class LLM_CLASSIFIER:
         
     def _initialize_groq_client(self) -> None:
         """Initialize the Groq client with API key."""
-        self.groq_api = os.getenv("GROQ_URL")
+        self.groq_api = os.getenv("GROQ_FUNC_CALL_API")
         if not self.groq_api:
             raise ValueError("GROQ_URL environment variable not set")
         self.groq = Groq(api_key=self.groq_api)
