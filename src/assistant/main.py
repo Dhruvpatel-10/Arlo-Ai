@@ -1,11 +1,13 @@
 # main.py
+import asyncio
 from src.llm.model import groq_prompt
 from src.utils.shared_resources import EVENT_BUS, STATE_MANAGER
 from src.core.state import  AssistantState
 from src.audio.central_manager import CentralAudioManager
 from src.url.url_parser import SearchQueryFinder
 from src.utils.logger import setup_logging
-
+from dotenv import load_dotenv
+load_dotenv()
 class Assistant:
     def __init__(self):
         self.event_bus = EVENT_BUS
@@ -21,10 +23,9 @@ class Assistant:
     async def create(cls):
         """Factory method to initialize the class asynchronously."""
         self = cls()  # Create instance
-
+        
         # Initialize synchronous components
         self.logger = setup_logging(module_name="Assistant")
-        self.logger.info("Initializing assistant...")
 
         # Initialize async components
         self.event_bus = EVENT_BUS
@@ -34,11 +35,15 @@ class Assistant:
         self.central_manager = await CentralAudioManager.create()
         self.search_query = SearchQueryFinder()
         await self.event_subscriber()
-        await self.user_input_loop()  
-
-        # Start any loops/tasks
-
+        
+        # Don't start the user_input_loop here
+        # Instead, return the instance so the caller can decide when to start it
         return self
+
+    # Add a method to start processing
+    async def start_processing(self):
+        """Start the user input loop as a separate task."""
+        return asyncio.create_task(self.user_input_loop())
 
     async def _get_result(self, transcript:str = None, classification:str = None) -> None:
 
@@ -94,7 +99,7 @@ class Assistant:
                 #     self.logger.info(f"f_exe: {f_exe} || visual_context: {visual_context}")
                 print("== Reached groq promt ==")
                 response = await groq_prompt(prompt=user_prompt, img_context=None, function_execution=None)
-                self.event_bus.publish("send.api",response=response)
+                await self.event_bus.publish("send.api",response=response)
                 print("\n" + "="*50)
                 print(f"ASSISTANT: {response}")
                 print("="*50)
