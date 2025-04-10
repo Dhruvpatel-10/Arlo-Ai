@@ -1,4 +1,5 @@
 from src.actions.function_define import *
+from src.actions.func import web_search, news_api
 from src.utils.logger import setup_logging
 
 logger = setup_logging()
@@ -58,5 +59,19 @@ def process_command(command: str,user_prompt: str = None, url: str = None) -> st
         logger.info(f"BROWSER EXECUTION")
         f_exe = handle_browser(url=url)
         return f_exe, visual_context
+    
+    elif "search_web":
+        logger.info(f"WEB SEARCH EXECUTION")
+        f_exe = web_search.web_search(query=user_prompt)
+        return f_exe, visual_context
+
+    elif "search_news":
+        logger.info(f"NEWS API EXECUTION")
+        f_exe = news_api.get_news()
+        return f_exe, visual_context
     else:
         return f_exe, visual_context  
+    
+    
+
+

@@ -3,6 +3,7 @@ import asyncio
 from src.llm.model import groq_prompt
 from src.utils.shared_resources import EVENT_BUS, STATE_MANAGER
 from src.core.state import  AssistantState
+from src.actions.function_registry import FunctionRegistry
 from src.audio.central_manager import CentralAudioManager
 from src.actions.url.url_parser import SearchQueryFinder
 from src.actions.cmdpharser import process_command
@@ -17,7 +18,7 @@ class Assistant:
         self.classification = None
         self.central_manager: CentralAudioManager = None
         self.search_query: SearchQueryFinder = None
-        self.function_caller = None
+        self.function_caller: FunctionRegistry = None
         self.ServerConnected = False
 
     @classmethod
@@ -31,7 +32,7 @@ class Assistant:
         # Initialize async components
         self.event_bus = EVENT_BUS
         self.state_manager = STATE_MANAGER
-
+        self.function_caller = FunctionRegistry()
         # Create background tasks
         self.central_manager = await CentralAudioManager.create(server_connected=sever_connected)
         self.search_query = SearchQueryFinder()
@@ -96,7 +97,8 @@ class Assistant:
                     self.logger.info(f"f_exe: {f_exe} || visual_context: {visual_context}")
 
                 print("== Reached groq promt ==")
-                response = await groq_prompt(prompt=user_prompt, img_context=None, function_execution=None)
+
+                response = await groq_prompt(prompt=user_prompt, img_context=visual_context, function_execution=f_exe)
                 if self.ServerConnected:
                     await self.event_bus.publish("send.api",response=response)
                 print("\n" + "="*50)

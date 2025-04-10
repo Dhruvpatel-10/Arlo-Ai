@@ -1,5 +1,6 @@
 # model.py
 import os, json
+from typing import Optional
 from groq import Groq, InternalServerError, APIConnectionError
 from src.utils.config import HISTORY_PATH , MAIN_LLM_MODEL
 from src.utils.logger import setup_logging
@@ -43,7 +44,7 @@ def save_history(history):
         json.dump(history, f, indent=4)
 
 @GenericUtils.retry
-async def groq_prompt(prompt, img_context, function_execution):
+async def groq_prompt(prompt, img_context: Optional[str], function_execution: Optional[str]) -> str:
 
     convo = load_history()  
     

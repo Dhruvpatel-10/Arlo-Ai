@@ -4,8 +4,6 @@ import os
 import urllib.request
 from dotenv import load_dotenv; load_dotenv()
 
-
-
 def get_news(category: str = "technology"):
     """
     Get news from gnews.io
@@ -27,5 +25,3 @@ def get_news(category: str = "technology"):
             news_data.append((str(i+1) + str(". " + "Title: " + articles[i]["title"]), str("Description: " + articles[i]['description'])))
 
     return news_data
-
-print(get_news())

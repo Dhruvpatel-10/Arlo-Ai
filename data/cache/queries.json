@@ -306,5 +306,33 @@
       "platform": "yahoo",
       "query": null
     }
+  },
+  {
+    "prompt": "Can you please search on the Google about Ronaldo?",
+    "action": {
+      "platform": "google",
+      "query": "Ronaldo"
+    }
+  },
+  {
+    "prompt": "Can you open the Instagram?",
+    "action": {
+      "platform": "instagram",
+      "query": null
+    }
+  },
+  {
+    "prompt": "Can you tell me latest news?",
+    "action": {
+      "platform": "google",
+      "query": "latest news"
+    }
+  },
+  {
+    "prompt": "Can you tell me about Donald Trump's latest information?",
+    "action": {
+      "platform": "google",
+      "query": "Donald Trump's latest information"
+    }
   }
 ]

@@ -28,7 +28,7 @@ def _extract_snippets(data):
     snippets = [entry["snippet"] for entry in data["organic"] if "snippet" in entry]
     return snippets
 
-def web_search():
-    data = _fetch_data("Which movies are coming soon?")
+def web_search(query:str):
+    data = _fetch_data(query)
     formatted_snippets = _extract_snippets(data)
     return formatted_snippets
