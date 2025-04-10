@@ -16,10 +16,9 @@ async def run_assistant_only():
     except KeyboardInterrupt:
         print("Shutting down assistant...")
 
-def run_server(host="0.0.0.0", port=8000, reload=True):
+def run_server(host="0.0.0.0", port=8000):
     """Start the uvicorn server directly in the current shell"""
-    reload_flag = "--reload" if reload else ""
-    cmd = f"uvicorn src.api.server:app --host {host} --port {port} {reload_flag}"
+    cmd = f"uvicorn src.api.server:app --host {host} --port {port}"
     print(f"Starting server with command: {cmd}")
     
     # Use os.system or subprocess.call to run in the foreground
@@ -37,7 +36,6 @@ def main():
     parser.add_argument("--no-server", action="store_true", help="Run the assistant without starting the server")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind the server to")
     parser.add_argument("--port", type=int, default=8000, help="Port to bind the server to")
-    parser.add_argument("--no-reload", action="store_true", help="Disable auto-reload of the server")
     
     args = parser.parse_args()
     
@@ -48,7 +46,7 @@ def main():
     else:
         # Run the server with the assistant
         print("Starting server with assistant...")
-        run_server(host=args.host, port=args.port, reload=not args.no_reload)
+        run_server(host=args.host, port=args.port)
 
 if __name__ == "__main__":
     main()

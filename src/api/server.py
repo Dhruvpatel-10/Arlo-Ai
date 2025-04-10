@@ -83,4 +83,4 @@ async def websocket_endpoint(websocket: WebSocket):
             assistant_backend.active_connections.remove(websocket)
         await websocket.close()
         
-# This file can be run with: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+# This file can be run with: uvicorn src.api.server:app --host 0.0.0.0 --port 8000
