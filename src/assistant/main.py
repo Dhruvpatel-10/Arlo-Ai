@@ -5,6 +5,7 @@ from src.utils.shared_resources import EVENT_BUS, STATE_MANAGER
 from src.core.state import  AssistantState
 from src.audio.central_manager import CentralAudioManager
 from src.actions.url.url_parser import SearchQueryFinder
+from src.actions.cmdpharser import process_command
 from src.utils.logger import setup_logging
 
 class Assistant:
@@ -14,8 +15,8 @@ class Assistant:
         self.logger = None
         self.transcription = None
         self.classification = None
-        self.central_manager = None
-        self.search_query = None
+        self.central_manager: CentralAudioManager = None
+        self.search_query: SearchQueryFinder = None
         self.function_caller = None
         self.ServerConnected = False
 
@@ -64,7 +65,7 @@ class Assistant:
     async def user_input_loop(self):
         while True:
             try:
-                
+
                 await self.event_bus.publish("start.wakeword.detection")
                 await self.event_bus.publish("start.audio.recording")
                 user_prompt: str = self.transcription
@@ -79,20 +80,21 @@ class Assistant:
 
                 await self.state_manager.set_state(AssistantState.PROCESSING)    
 
-                # action = await self.function_caller.call(user_prompt)
-                # action = str(action).lower()
-                # f_exe = None
-                # visual_context = None
+                action = await self.function_caller.call(user_prompt)
+                action = str(action).lower()
+                f_exe = None
+                visual_context = None
 
-                # if action and "none" not in action.lower():
-                #     if 'open_browser' in action:
-                #         self.logger.info("OPENING BROWSER")
-                #         url_parser = self.search_query.find_query(prompt=user_prompt)
-                #         f_exe, visual_context = process_command(command=action, url=url_parser)
-                #     else:
-                #         self.logger.info("EXECUTING FUNCTION")
-                #         f_exe, visual_context = process_command(command=action, user_prompt=user_prompt)
-                #     self.logger.info(f"f_exe: {f_exe} || visual_context: {visual_context}")
+                if action and "none" not in action.lower():
+                    if 'open_browser' in action:
+                        self.logger.info("OPENING BROWSER")
+                        url_parser = self.search_query.find_query(prompt=user_prompt)
+                        f_exe, visual_context = process_command(command=action, url=url_parser)
+                    else:
+                        self.logger.info("EXECUTING FUNCTION")
+                        f_exe, visual_context = process_command(command=action, user_prompt=user_prompt)
+                    self.logger.info(f"f_exe: {f_exe} || visual_context: {visual_context}")
+
                 print("== Reached groq promt ==")
                 response = await groq_prompt(prompt=user_prompt, img_context=None, function_execution=None)
                 if self.ServerConnected:
