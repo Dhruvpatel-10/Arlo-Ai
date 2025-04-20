@@ -60,12 +60,12 @@ def process_command(command: str,user_prompt: str = None, url: str = None) -> st
         f_exe = handle_browser(url=url)
         return f_exe, visual_context
     
-    elif "search_web":
+    elif "web_search":
         logger.info(f"WEB SEARCH EXECUTION")
         f_exe = web_search.web_search(query=user_prompt)
         return f_exe, visual_context
 
-    elif "search_news":
+    elif "news_search":
         logger.info(f"NEWS API EXECUTION")
         f_exe = news_api.get_news()
         return f_exe, visual_context
