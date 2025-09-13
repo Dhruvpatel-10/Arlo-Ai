@@ -28,3 +28,28 @@ Frontend (React)                  Backend (FastAPI + LangChain)
                                   - NLP + Function Execution
                                   - TTS (Edge-TTS)
                                   - Audio Playback
+```
+## ⚙️ Quick Start
+1. Clone the repo
+```
+git clone https://github.com/Dhruvpatel-10/Arlo-Ai.git
+cd Arlo-Ai
+```
+2. Install backend
+```
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+## 🧩 Example Usage
+- Wake word: “Hey Arlo”
+- Ask: “What’s the weather today?”
+- Arlo responds with speech in real time.
+
+
+## 🌟 Why Arlo?
+Open & Modular — Swap STT/TTS/NLP engines easily
+Low-latency — Event-driven async architecture
+Customizable — Extend for sales, healthcare, or productivity use cases
+
+
